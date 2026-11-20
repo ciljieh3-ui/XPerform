@@ -1,0 +1,66 @@
+Saya melampirkan file `index.html` aplikasi **XPerform** (antarmuka iOS 26 Liquid Glass dengan 80 fitur Performance, 80 fitur Battery, Per-App Checklist Modal, dan Global System Reset).
+
+Tugas Anda adalah melakukan dua hal sekaligus dalam satu proyek lengkap:
+1. Menerjemahkan seluruh teks antarmuka & penjelasan 160 fitur di dalam `index.html` ke **Bahasa Indonesia** tanpa mengurangi satu pun animasi, efek Liquid Glass, atau fitur.
+2. Membangun proyek **Android Studio (Kotlin)** lengkap dan siap kompilasi untuk membungkus `index.html` menjadi aplikasi Android native yang terhubung penuh dengan **Shizuku API (UID 2000 / Shell)** serta dioptimalkan agar berjalan **mulus terkunci di 60–120 FPS tanpa lag sedikit pun**.
+
+Ikuti spesifikasi teknis ketat berikut:
+
+---
+
+### BAGIAN 1: LOKALISASI BAHASA INDONESIA & OPTIMALISASI RENDER `index.html`
+1. **Terjemahan Menyeluruh ke Bahasa Indonesia:**
+   - Terjemahkan semua judul, subjudul, label tombol, status Shizuku, filter modal (*Semua Aplikasi*, *Hanya Game*, *Media Sosial*, *Pilih Semua*, *Hapus Pilihan*), dialog konfirmasi *Reset Semua*, serta deskripsi teknis pada ke-160 fitur (80 Performa & 80 Baterai) ke bahasa Indonesia yang jelas dan mudah dipahami, sambil mempertahankan istilah teknis baku Android (*ART Compilation*, *Doze Mode*, *Wakelock*, *ZRAM*, *Refresh Rate*, *Standby Bucket*, *SurfaceFlinger*).
+2. **Pertahankan 100% Desain & Animasi iOS 26:**
+   - Dilarang mengubah palet warna OLED `#000000`, kartu `#1C1C1E`, kurva pegas `cubic-bezier(0.32, 0.72, 0, 1)`, efek *backdrop-filter blur*, atau *floating capsule navigation*.
+3. **Optimalisasi Performa UI WebView (Zero-Lag 60+ FPS):**
+   - Tambahkan properti akselerasi GPU (`transform: translateZ(0)`, `backface-visibility: hidden`, dan `will-change: transform, opacity`) pada elemen modal bottom-sheet, capsule bar, dan toggle switch agar animasi berjalan di *GPU Compositor Thread* tanpa memicu *layout reflow*.
+   - Terapkan `content-visibility: auto` dan `contain-intrinsic-size` pada daftar 160 kartu fitur dan daftar aplikasi di dalam modal sehingga WebView hanya me-render kartu yang terlihat di layar saat di-scroll cepat.
+   - Hubungkan fungsi pemuat daftar aplikasi dan eksekutor perintah di JavaScript langsung ke `window.XPerformBridge` (dengan fallback otomatis ke data simulasi jika dibuka di browser PC).
+
+---
+
+### BAGIAN 2: ARSITEKTUR PROYEK ANDROID NATIVE (KOTLIN + SHIZUKU UID 2000)
+1. **Konfigurasi Gradle & AndroidManifest:**
+   - Gunakan `minSdk = 26`, `targetSdk = 35`, Kotlin Coroutines (`kotlinx-coroutines-android`), dan dependensi resmi Shizuku (`dev.rikka.shizuku:api:13.1.5` dan `dev.rikka.shizuku:provider:13.1.5`).
+   - Daftarkan `ShizukuProvider` di `AndroidManifest.xml`, tambahkan izin `moe.shizuku.manager.permission.API_V23`, `QUERY_ALL_PACKAGES`, dan aktifkan `android:hardwareAccelerated="true"` pada level `<application>` dan `<activity>`.
+2. **Shizuku AIDL UserService (`IShellService.aidl` & `ShellUserService.kt`):**
+   - Wajib menggunakan `Shizuku.bindUserService(...)` berbasis AIDL (jangan hanya memakai `Shizuku.newProcess()` satu per satu) agar eksekusi puluhan perintah shell secara batch berlangsung dalam hitungan milidetik di proses latar belakang tanpa membekukan UI.
+
+---
+
+### BAGIAN 3: JEMBATAN NATIVE (`XPerformBridge.kt`) & FITUR NYATA ANDROID
+Buat kelas `@JavascriptInterface` bernama `XPerformBridge` yang menyediakan metode berikut:
+1. **`getInstalledApps()` (Asinkron & Ringan):**
+   - Membaca seluruh aplikasi nyata yang terpasang via `PackageManager`, mendeteksi kategori Game (`ApplicationInfo.CATEGORY_GAME`), aplikasi sosial, dan aplikasi sistem.
+   - Kompres ikon aplikasi ke ukuran kecil `40x40px` format WebP/PNG Base64 dan simpan di *memory/disk cache* (`LruCache`) agar pengiriman JSON ke WebView instan dan tidak memakan RAM maupun menyebabkan *stutter* saat modal pemilihan aplikasi dibuka.
+2. **`getDeviceTelemetry()`:**
+   - Mengambil data perangkat keras nyata secara berkala (persentase baterai, suhu baterai °C, arus pengisian mA via `BatteryManager`, penggunaan RAM nyata via `ActivityManager.MemoryInfo`, dan nama model HP) untuk ditampilkan di header dashboard.
+3. **`executeCommand(command: String)` & `executeBatchCommands(commandsJson: String)`:**
+   - Mengeksekusi perintah shell Shizuku untuk setiap aplikasi yang dicentang pengguna pada fitur yang dipilih (seperti `cmd package compile -m speed`, `am set-standby-bucket`, `pm suspend`, `cmd appops set`, `cmd game mode`, `cmd deviceidle force-idle`, `wm size`, dll.) di thread `Dispatchers.IO`, lalu mengirim status hasil eksekusi kembali ke JavaScript via `webView.evaluateJavascript(...)`.
+4. **`resetAllTweaks(modifiedPackagesJson: String)`:**
+   - Mengeksekusi pemulihan sistem total ke pengaturan bawaan pabrik Android: menjalankan `settings delete` untuk key yang diubah, `device_config reset untrusted_defaults`, `wm size reset`, `wm density reset`, `cmd deviceidle unforce`, mencabut `pm unsuspend` serta menjalankan `cmd appops reset` dan mengembalikan *standby bucket* ke `active` untuk seluruh aplikasi yang pernah dicentang.
+5. **`checkAndRequestShizuku()`:**
+   - Mengecek status `Shizuku.pingBinder()` dan `Shizuku.checkSelfPermission()`, serta memunculkan dialog izin Shizuku native jika belum diizinkan.
+
+---
+
+### BAGIAN 4: OPTIMALISASI KHUSUS WEBVIEW AGAR FULL 60–120 FPS SMOOTH
+Pada `MainActivity.kt`, terapkan konfigurasi berikut agar WebView memiliki respons sentuhan setara aplikasi native:
+1. Aktifkan akselerasi perangkat keras penuh: `webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)`.
+2. Konfigurasikan `WebSettings`: aktifkan `javaScriptEnabled = true`, `domStorageEnabled = true`, `databaseEnabled = true`, `cacheMode = WebSettings.LOAD_DEFAULT`, dan matikan fitur berat yang tidak perlu (`setSupportZoom(false)`, `builtInZoomControls = false`, `displayZoomControls = false`).
+3. Matikan efek *overscroll glow* bawaan Android (`overScrollMode = View.OVER_SCROLL_NEVER`) dan sembunyikan *scrollbar* agar fisika *bounce/scroll* iOS 26 terasa bersih.
+4. Gunakan tampilan *Edge-to-Edge* penuh (`WindowCompat.setDecorFitsSystemWindows(window, false)`) dengan status bar dan navigation bar transparan agar warna OLED `#000000` menyatu sempurna dengan layar HP.
+5. Pastikan tidak ada operasi berat (pembacaan `PackageManager`, kompresi ikon, maupun panggilan Binder Shizuku) yang berjalan di *Main UI Thread*.
+
+---
+
+### ATURAN KELUARAN:
+Berikan seluruh kode file secara **LENGKAP 100% dari awal sampai akhir tanpa disingkat (`// ...` dilarang)**:
+1. `index.html` (Bahasa Indonesia + optimasi GPU/DOM)
+2. `build.gradle.kts` (app level)
+3. `AndroidManifest.xml`
+4. `IShellService.aidl`
+5. `ShellUserService.kt`
+6. `XPerformBridge.kt`
+7. `MainActivity.kt`

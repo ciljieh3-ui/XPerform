@@ -1,0 +1,6 @@
+{
+  "name": "XPerform",
+  "description": "Kontrol sistem Shizuku iOS 26 Liquid Glass untuk optimasi performa dan baterai Android.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

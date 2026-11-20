@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-black">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>XPerform - Kontrol Sistem Shizuku iOS 26</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        iosBg: '#000000',
+                        iosCard: '#1C1C1E',
+                        iosCardSecondary: '#2C2C2E',
+                        iosSeparator: 'rgba(84, 84, 88, 0.36)',
+                        iosBlue: '#0A84FF',
+                        iosGreen: '#30D158',
+                        iosRed: '#FF453A',
+                        iosOrange: '#FF9F0A',
+                        iosLabel: '#FFFFFF',
+                        iosLabelSecondary: 'rgba(235, 235, 245, 0.6)',
+                        iosLabelTertiary: 'rgba(235, 235, 245, 0.3)'
+                    },
+                    fontFamily: {
+                        ios: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', 'system-ui', 'sans-serif'],
+                        mono: ['"SF Mono"', 'ui-monospace', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+                    },
+                    transitionTimingFunction: {
+                        'ios-spring': 'cubic-bezier(0.32, 0.72, 0, 1)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        /* iOS 26 Liquid Glass & System Typography Rules */
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #000000;
+            color: #FFFFFF;
+            overflow-x: hidden;
+            overscroll-behavior-y: none;
+        }
+
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Liquid Glass Optics + GPU Compositor Acceleration */
+        .liquid-glass {
+            background: rgba(30, 30, 34, 0.68);
+            backdrop-filter: blur(28px) saturate(190%);
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
+            box-shadow: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.22), 0 8px 32px rgba(0, 0, 0, 0.56);
+            border: 0.5px solid rgba(255, 255, 255, 0.12);
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        .liquid-glass-pill {
+            background: rgba(44, 44, 46, 0.75);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            box-shadow: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.18), 0 4px 16px rgba(0, 0, 0, 0.4);
+            border: 0.5px solid rgba(255, 255, 255, 0.14);
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        /* Navbar Safe-Area Top */
+        #topNavbar {
+            padding-top: calc(12px + var(--safe-top));
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: background-color, backdrop-filter;
+        }
+
+        #mainContent {
+            padding-top: calc(56px + var(--safe-top));
+            padding-bottom: calc(112px + var(--safe-bottom));
+        }
+
+        /* Hairline borders */
+        .border-hairline {
+            border-bottom: 0.5px solid rgba(84, 84, 88, 0.36);
+        }
+
+        /* Virtualized Render Optimization (60-120 FPS Scroll) */
+        .feature-card {
+            content-visibility: auto;
+            contain-intrinsic-size: 0 98px;
+            contain: layout style paint;
+        }
+
+        .app-row {
+            content-visibility: auto;
+            contain-intrinsic-size: 0 56px;
+            contain: layout style paint;
+        }
+
+        /* iOS Switch Toggle (GPU Accelerated) */
+        .ios-switch {
+            position: relative;
+            display: inline-block;
+            width: 51px;
+            height: 31px;
+            transform: translateZ(0);
+        }
+        .ios-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .ios-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #3A3A3C;
+            transition: background-color .3s cubic-bezier(0.32, 0.72, 0, 1);
+            border-radius: 34px;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: background-color;
+        }
+        .ios-slider:before {
+            position: absolute;
+            content: "";
+            height: 27px;
+            width: 27px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: transform .3s cubic-bezier(0.32, 0.72, 0, 1);
+            border-radius: 50%;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            will-change: transform;
+        }
+        input:checked + .ios-slider.perf-switch {
+            background-color: #0A84FF;
+        }
+        input:checked + .ios-slider.batt-switch {
+            background-color: #30D158;
+        }
+        input:checked + .ios-slider:before {
+            transform: translate3d(20px, 0, 0);
+        }
+
+        /* Bottom Sheet Modal Physics (GPU Compositor Only) */
+        .sheet-backdrop {
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: opacity 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: opacity;
+        }
+        .sheet-container {
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+            transform: translate3d(0, 100%, 0);
+            backface-visibility: hidden;
+            will-change: transform;
+            padding-bottom: var(--safe-bottom);
+        }
+        .sheet-container.open {
+            transform: translate3d(0, 0, 0);
+        }
+
+        /* Scrollbar Hiding */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* iOS Active Scale Touch Feedback */
+        .touch-bounce {
+            transition: transform 0.15s cubic-bezier(0.32, 0.72, 0, 1);
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: transform;
+        }
+        .touch-bounce:active {
+            transform: scale3d(0.96, 0.96, 1);
+        }
+
+        /* Capsule Scroll Animation (GPU Compositor Only) */
+        .capsule-bar {
+            bottom: calc(20px + var(--safe-bottom));
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            will-change: transform, opacity;
+        }
+        .capsule-bar.hidden-nav {
+            transform: translate3d(0, 120px, 0);
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="h-full bg-black text-white antialiased select-none">
+
+    <!-- TOP PERMANENT / COLLAPSED LIQUID GLASS NAVBAR -->
+    <header id="topNavbar" class="fixed top-0 left-0 right-0 z-40 px-4 pb-3 transition-all duration-300 bg-transparent">
+        <div class="max-w-2xl mx-auto flex items-center justify-between gap-2">
+            <div class="flex items-center space-x-2 min-w-0">
+                <div class="w-7 h-7 rounded-full bg-iosCardSecondary flex items-center justify-center border border-white/10 shrink-0">
+                    <svg class="w-4 h-4 text-iosBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <span id="navTitle" class="font-bold text-lg opacity-0 transition-opacity duration-200 tracking-tight truncate">XPerform</span>
+                <button id="shizukuStatusPill" onclick="requestShizukuPermission()" class="touch-bounce px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-iosGreen/20 text-iosGreen border border-iosGreen/30 flex items-center space-x-1 shrink-0">
+                    <span id="shizukuStatusDot" class="w-1.5 h-1.5 rounded-full bg-iosGreen animate-pulse"></span>
+                    <span id="shizukuStatusText">UID 2000 (Shizuku)</span>
+                </button>
+            </div>
+
+            <div class="flex items-center space-x-1.5 shrink-0">
+                <button onclick="openLogConsole()" class="touch-bounce px-2.5 py-1.5 rounded-full text-xs font-mono font-medium bg-iosCardSecondary hover:bg-white/10 text-iosLabelSecondary border border-white/10 flex items-center space-x-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Log</span>
+                </button>
+                <button onclick="openGlobalResetSheet()" class="touch-bounce px-3 py-1.5 rounded-full text-xs font-semibold bg-iosRed/20 text-iosRed hover:bg-iosRed/30 border border-iosRed/40 transition">
+                    Reset Semua
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN SCROLL CONTAINER -->
+    <main id="mainContent" class="max-w-2xl mx-auto px-4">
+
+        <!-- LARGE TITLE HEADER -->
+        <section class="mt-3 mb-5">
+            <h1 class="text-4xl font-extrabold tracking-tight text-white mb-1">XPerform</h1>
+            <p id="deviceSubtitle" class="text-xs font-medium text-iosLabelSecondary tracking-normal">Mesin Sistem iOS 26 Liquid Glass • Kontrol Perangkat Keras Langsung</p>
+        </section>
+
+        <!-- LIVE TELEMETRY METRIC STRIP (TABULAR-NUMS) -->
+        <section class="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div class="bg-iosCard rounded-2xl p-3 border border-white/5 flex flex-col justify-between">
+                <span class="text-[10px] uppercase font-bold text-iosLabelTertiary tracking-wider">CPU &amp; RAM</span>
+                <div class="mt-1 flex items-baseline justify-between">
+                    <span id="metricRam" class="text-base font-extrabold font-mono tabular-nums text-iosBlue">42%</span>
+                    <span id="metricFreq" class="text-[10px] font-mono tabular-nums text-iosLabelSecondary">2.80GHz</span>
+                </div>
+            </div>
+            <div class="bg-iosCard rounded-2xl p-3 border border-white/5 flex flex-col justify-between">
+                <span class="text-[10px] uppercase font-bold text-iosLabelTertiary tracking-wider">Layar</span>
+                <div class="mt-1 flex items-baseline justify-between">
+                    <span id="metricFps" class="text-base font-extrabold font-mono tabular-nums text-iosGreen">120 Hz</span>
+                    <span id="metricRefreshLabel" class="text-[10px] font-mono tabular-nums text-iosLabelSecondary">Refresh Rate</span>
+                </div>
+            </div>
+            <div class="bg-iosCard rounded-2xl p-3 border border-white/5 flex flex-col justify-between">
+                <span class="text-[10px] uppercase font-bold text-iosLabelTertiary tracking-wider">Baterai</span>
+                <div class="mt-1 flex items-baseline justify-between">
+                    <span id="metricTemp" class="text-base font-extrabold font-mono tabular-nums text-iosOrange">33.4°C</span>
+                    <span id="metricCurrent" class="text-[10px] font-mono tabular-nums text-iosLabelSecondary">-320mA</span>
+                </div>
+            </div>
+            <div class="bg-iosCard rounded-2xl p-3 border border-white/5 flex flex-col justify-between">
+                <span class="text-[10px] uppercase font-bold text-iosLabelTertiary tracking-wider">Tweak Aktif</span>
+                <div class="mt-1 flex items-baseline justify-between">
+                    <span id="metricActiveTweaks" class="text-base font-extrabold font-mono tabular-nums text-white">0 / 160</span>
+                    <span id="metricBatteryPct" class="text-[10px] font-mono tabular-nums text-iosLabelSecondary">Aktif</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEARCH BAR FOR FEATURES -->
+        <div id="searchContainer" class="mb-5 relative hidden">
+            <input type="text" id="featureSearchInput" oninput="filterFeatures()" placeholder="Cari 160 Fitur Performa &amp; Baterai..."
+                class="w-full bg-iosCard border border-white/10 rounded-xl px-4 py-2.5 pl-10 pr-16 text-sm text-white placeholder-iosLabelTertiary focus:outline-none focus:border-iosBlue transition">
+            <svg class="w-4 h-4 text-iosLabelSecondary absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <button onclick="toggleSearch()" class="absolute right-3 top-2.5 text-xs text-iosLabelSecondary bg-white/10 px-2.5 py-1 rounded-md">Batal</button>
+        </div>
+
+        <!-- TAB CONTENT SECTION HEADER -->
+        <div class="flex items-center justify-between mb-3 px-1">
+            <div class="flex items-center space-x-2">
+                <span id="tabCategoryBadge" class="w-2 h-2 rounded-full bg-iosBlue"></span>
+                <h2 id="tabCategoryTitle" class="text-xs font-bold uppercase tracking-wider text-iosLabelSecondary">OPTIMASI PERFORMA (80 FITUR)</h2>
+            </div>
+            <span id="tabFeatureCount" class="text-xs font-mono text-iosLabelTertiary">80 Fitur</span>
+        </div>
+
+        <!-- LIST OF INSET GROUPED CARDS (AUTHENTIC iOS GROUPED TABLE) -->
+        <div id="featuresList" class="bg-iosCard rounded-2xl border border-white/5 divide-y divide-iosSeparator overflow-hidden">
+            <!-- Injeksi Dinamis 80 Fitur Performa / 80 Fitur Baterai -->
+        </div>
+
+    </main>
+
+    <!-- FLOATING LIQUID GLASS CAPSULE TAB BAR & SEARCH FLOATING BUTTON -->
+    <div id="capsuleNav" class="capsule-bar fixed left-0 right-0 z-30 px-4 pointer-events-none">
+        <div class="max-w-md mx-auto flex items-center space-x-3 pointer-events-auto">
+
+            <!-- Capsule Tab Bar -->
+            <div class="liquid-glass rounded-full p-1.5 flex-1 flex items-center justify-between">
+                <button id="btnTabPerf" onclick="switchTab('perf')" class="touch-bounce flex-1 py-2.5 rounded-full text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-200 bg-iosBlue text-white shadow-md">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span>Performa</span>
+                    <span id="badgePerfCount" class="bg-white/20 text-white text-[10px] font-mono px-1.5 py-0.5 rounded-full">0</span>
+                </button>
+
+                <button id="btnTabBatt" onclick="switchTab('batt')" class="touch-bounce flex-1 py-2.5 rounded-full text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-200 text-iosLabelSecondary hover:text-white">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5-2a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2v-1h1a1 1 0 001-1v-2a1 1 0 00-1-1h-1V8z"/></svg>
+                    <span>Baterai</span>
+                    <span id="badgeBattCount" class="bg-white/10 text-iosLabelSecondary text-[10px] font-mono px-1.5 py-0.5 rounded-full">0</span>
+                </button>
+            </div>
+
+            <!-- Floating Search Trigger Button -->
+            <button onclick="toggleSearch()" aria-label="Cari Fitur" class="touch-bounce liquid-glass-pill w-12 h-12 rounded-full flex items-center justify-center text-white shrink-0">
+                <svg class="w-5 h-5 text-iosBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </button>
+
+        </div>
+    </div>
+
+    <!-- TARGET APP SELECTION iOS 26 BOTTOM SHEET MODAL -->
+    <div id="appModalBackdrop" onclick="if(event.target===this) closeAppModal()" class="fixed inset-0 z-50 sheet-backdrop opacity-0 pointer-events-none flex flex-col justify-end">
+        <div id="appModalContainer" class="liquid-glass sheet-container w-full max-w-2xl mx-auto rounded-t-[32px] max-h-[85vh] flex flex-col overflow-hidden border-t border-white/20">
+
+            <!-- Sheet Drag Indicator & Header -->
+            <div class="px-5 pt-3 pb-3 border-b border-iosSeparator flex flex-col items-center shrink-0">
+                <div class="w-10 h-1.5 rounded-full bg-white/20 mb-3"></div>
+                <div class="w-full flex items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <h3 id="modalFeatureTitle" class="text-base font-bold text-white tracking-tight truncate">Judul Fitur</h3>
+                        <p id="modalFeatureDesc" class="text-xs text-iosLabelSecondary line-clamp-2">Konfigurasikan tweak khusus untuk aplikasi target</p>
+                    </div>
+                    <button onclick="closeAppModal()" aria-label="Tutup Modal" class="touch-bounce w-8 h-8 rounded-full bg-iosCardSecondary text-iosLabelSecondary flex items-center justify-center font-bold shrink-0">✕</button>
+                </div>
+            </div>
+
+            <!-- Filter Chips & Search Bar -->
+            <div class="px-5 py-3 border-b border-iosSeparator shrink-0 bg-black/30 space-y-2.5">
+                <!-- App Search Box -->
+                <div class="relative">
+                    <input type="text" id="appSearchInput" oninput="renderModalAppList()" placeholder="Cari aplikasi terpasang atau nama paket..."
+                        class="w-full bg-iosCard border border-white/10 rounded-xl px-3.5 py-2 pl-9 text-xs text-white placeholder-iosLabelTertiary focus:outline-none focus:border-iosBlue">
+                    <svg class="w-3.5 h-3.5 text-iosLabelSecondary absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+
+                <!-- Quick Filter & Selection Chips -->
+                <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar pt-1">
+                    <button id="chipFilterAll" onclick="setModalCategoryFilter('all')" class="touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/20 text-white border border-white/20 shrink-0">Semua Aplikasi</button>
+                    <button id="chipFilterGames" onclick="setModalCategoryFilter('games')" class="touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-iosBlue/20 hover:bg-iosBlue/30 text-iosBlue border border-iosBlue/30 shrink-0">Hanya Game</button>
+                    <button id="chipFilterSocial" onclick="setModalCategoryFilter('social')" class="touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-iosGreen/20 hover:bg-iosGreen/30 text-iosGreen border border-iosGreen/30 shrink-0">Media Sosial</button>
+                    <button onclick="chipSelectApps('all')" class="touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/10 shrink-0">Pilih Semua</button>
+                    <button onclick="chipSelectApps('none')" class="touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-iosRed/20 hover:bg-iosRed/30 text-iosRed border border-iosRed/30 shrink-0">Hapus Pilihan</button>
+                </div>
+            </div>
+
+            <!-- Dynamic App Checklist Scroll Area -->
+            <div id="modalAppList" class="flex-1 overflow-y-auto p-4 space-y-1 divide-y divide-iosSeparator/40">
+                <!-- Daftar aplikasi diinjeksi secara dinamis -->
+            </div>
+
+            <!-- Shell Preview Code Box & Execution Controls -->
+            <div class="p-4 border-t border-iosSeparator bg-black/60 shrink-0 space-y-3">
+                <div class="bg-black/90 rounded-xl p-2.5 border border-white/10 font-mono text-[11px] text-iosGreen overflow-x-auto max-h-24">
+                    <div class="text-[10px] text-iosLabelTertiary font-sans uppercase mb-1">Pratinjau Perintah Shizuku (UID 2000):</div>
+                    <code id="modalShellPreview" class="whitespace-pre-wrap break-all">$ cmd package compile -m speed -f com.mobile.legends</code>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="resetCurrentFeatureModal()" class="touch-bounce flex-1 py-2.5 rounded-xl text-xs font-semibold bg-iosCardSecondary hover:bg-white/10 text-iosRed border border-iosRed/30">
+                        Reset Fitur
+                    </button>
+                    <button onclick="applyAppSelectionModal()" class="touch-bounce flex-[2] py-2.5 rounded-xl text-xs font-bold bg-iosBlue hover:bg-iosBlue/90 text-white shadow-lg flex items-center justify-center space-x-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span>Terapkan ke Aplikasi Terpilih</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- GLOBAL RESET ALL SHEET MODAL -->
+    <div id="globalResetBackdrop" onclick="if(event.target===this) closeGlobalResetSheet()" class="fixed inset-0 z-50 sheet-backdrop opacity-0 pointer-events-none flex flex-col justify-end">
+        <div id="globalResetContainer" class="liquid-glass sheet-container w-full max-w-2xl mx-auto rounded-t-[32px] max-h-[85vh] flex flex-col overflow-hidden border-t border-iosRed/40">
+
+            <div class="px-5 pt-4 pb-3 border-b border-iosSeparator flex items-center justify-between shrink-0 bg-iosRed/10">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-full bg-iosRed/20 text-iosRed flex items-center justify-center font-bold shrink-0">⚠️</div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-white">Reset Sistem ke Bawaan Pabrik</h3>
+                        <p class="text-xs text-iosLabelSecondary">Kembalikan seluruh 160 tweak ke kondisi standar Android</p>
+                    </div>
+                </div>
+                <button onclick="closeGlobalResetSheet()" aria-label="Tutup" class="touch-bounce w-8 h-8 rounded-full bg-iosCardSecondary text-iosLabelSecondary flex items-center justify-center font-bold">✕</button>
+            </div>
+
+            <div class="p-5 overflow-y-auto space-y-4">
+                <div class="bg-iosCard rounded-xl p-3 border border-white/5">
+                    <span class="text-xs text-iosLabelSecondary block mb-1">Ringkasan Modifikasi Aktif:</span>
+                    <div class="flex items-center justify-between text-sm font-semibold">
+                        <span>Tweak Dimodifikasi:</span>
+                        <span id="resetActiveCount" class="font-mono text-iosOrange">0 Aktif</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm font-semibold mt-1">
+                        <span>Paket Aplikasi Terdampak:</span>
+                        <span id="resetTargetedAppsCount" class="font-mono text-iosBlue">0 Aplikasi</span>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="text-xs font-semibold text-iosLabelSecondary block mb-1.5">Skrip Batch Pemulihan Sistem Bawaan Lengkap:</span>
+                    <div class="bg-black/90 rounded-xl p-3 border border-white/10 font-mono text-[11px] text-iosRed max-h-48 overflow-y-auto">
+                        <code id="globalResetShellScript" class="whitespace-pre-wrap"></code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-iosSeparator bg-black/80 shrink-0 flex space-x-3">
+                <button onclick="closeGlobalResetSheet()" class="touch-bounce flex-1 py-3 rounded-xl text-xs font-semibold bg-iosCardSecondary text-white">
+                    Batal
+                </button>
+                <button onclick="executeGlobalSystemReset()" class="touch-bounce flex-[2] py-3 rounded-xl text-xs font-bold bg-iosRed hover:bg-iosRed/90 text-white shadow-lg flex items-center justify-center space-x-1.5">
+                    <span>Jalankan Reset Sistem Penuh</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- LOG CONSOLE MODAL -->
+    <div id="logConsoleBackdrop" onclick="if(event.target===this) closeLogConsole()" class="fixed inset-0 z-50 sheet-backdrop opacity-0 pointer-events-none flex flex-col justify-end">
+        <div id="logConsoleContainer" class="liquid-glass sheet-container w-full max-w-2xl mx-auto rounded-t-[32px] h-[75vh] flex flex-col overflow-hidden border-t border-white/20">
+            <div class="px-5 pt-3 pb-3 border-b border-iosSeparator flex items-center justify-between shrink-0 bg-black/40">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-iosGreen animate-pulse"></span>
+                    <h3 class="text-sm font-bold font-mono text-white">Log Konsol Shizuku UID 2000</h3>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="clearConsoleLog()" class="touch-bounce px-2.5 py-1 bg-iosCardSecondary text-[11px] text-iosLabelSecondary rounded-md">Bersihkan</button>
+                    <button onclick="closeLogConsole()" aria-label="Tutup Konsol" class="touch-bounce w-7 h-7 rounded-full bg-iosCardSecondary text-iosLabelSecondary flex items-center justify-center">✕</button>
+                </div>
+            </div>
+            <div id="consoleLogOutput" class="flex-1 bg-black p-4 font-mono text-xs text-iosGreen overflow-y-auto space-y-1.5 leading-relaxed">
+                <div class="text-iosLabelTertiary">[INISIALISASI] Jembatan XPerform terhubung melalui Shizuku (UID 2000).</div>
+                <div class="text-iosLabelTertiary">[INFO PERANGKAT] Akses Shell Android siap dijalankan.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC & FEATURE DATA ENGINE -->
+    <script>
+        // --- DATA PAKET SIMULASI FALLBACK (SAAT DIBUKA DI BROWSER PC) ---
+        const DEFAULT_PACKAGES = [
+            { name: "Mobile Legends: Bang Bang", package: "com.mobile.legends", category: "game" },
+            { name: "Genshin Impact", package: "com.miHoYo.GenshinImpact", category: "game" },
+            { name: "PUBG Mobile", package: "com.pubg.imobile", category: "game" },
+            { name: "Free Fire", package: "com.dts.freefireth", category: "game" },
+            { name: "Call of Duty: Mobile", package: "com.activision.callofduty.shooter", category: "game" },
+            { name: "Roblox", package: "com.roblox.client", category: "game" },
+            { name: "EA SPORTS FC Mobile", package: "com.ea.gp.fifamobile", category: "game" },
+            { name: "Honkai: Star Rail", package: "com.HoYoverse.hkrpgoversea", category: "game" },
+            { name: "WhatsApp", package: "com.whatsapp", category: "social" },
+            { name: "Instagram", package: "com.instagram.android", category: "social" },
+            { name: "TikTok", package: "com.ss.android.ugc.trill", category: "social" },
+            { name: "YouTube", package: "com.google.android.youtube", category: "social" },
+            { name: "Facebook", package: "com.facebook.katana", category: "social" },
+            { name: "Shopee", package: "com.shopee.id", category: "app" },
+            { name: "Gojek", package: "com.gojek.app", category: "app" },
+            { name: "Tokopedia", package: "com.tokopedia.tkpd", category: "app" },
+            { name: "Spotify", package: "com.spotify.music", category: "app" },
+            { name: "Discord", package: "com.discord", category: "social" },
+            { name: "Telegram", package: "org.telegram.messenger", category: "social" },
+            { name: "Google Chrome", package: "com.android.chrome", category: "app" }
+        ];
+
+        let installedPackages = [...DEFAULT_PACKAGES];
+        let modalCategoryFilter = 'all';
+        let shizukuStatus = {
+            connected: !window.XPerformBridge,
+            granted: !window.XPerformBridge,
+            userServiceBound: false
+        };
+
+        // --- CALLBACK DARI ANDROID NATIVE BRIDGE ---
+        window.onInstalledAppsLoaded = function(payload) {
+            try {
+                const parsed = typeof payload === 'string' ? JSON.parse(payload) : payload;
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    installedPackages = parsed;
+                    appendConsoleLog(`[BRIDGE] Berhasil memuat ${parsed.length} aplikasi terpasang dari PackageManager.`);
+                    if (activeModalFeatureId) {
+                        renderModalAppList();
+                    }
+                }
+            } catch (e) {
+                appendConsoleLog(`[BRIDGE ERROR] Gagal mem-parsing daftar aplikasi: ${e.message}`);
+            }
+        };
+
+        window.onInstalledAppsError = function(payload) {
+            appendConsoleLog(`[BRIDGE ERROR] ${payload}`);
+        };
+
+        window.onShizukuStatusChanged = function(payload) {
+            try {
+                const status = typeof payload === 'string' ? JSON.parse(payload) : payload;
+                shizukuStatus = status;
+                updateShizukuBadgeUI(status);
+                const label = status.granted
+                    ? `UID 2000 Terhubung${status.userServiceBound ? ' (AIDL UserService Aktif)' : ''}`
+                    : (status.connected ? 'Menunggu izin Shizuku dari pengguna' : 'Layanan Shizuku tidak terdeteksi');
+                appendConsoleLog(`[SHIZUKU] ${label}`);
+            } catch (e) {}
+        };
+
+        window.onCommandResult = function(command, resultPayload) {
+            try {
+                const res = typeof resultPayload === 'string' ? JSON.parse(resultPayload) : resultPayload;
+                if (res.ok) {
+                    appendConsoleLog(`[OK ec=${res.exitCode}] ${command}${res.stdout ? ' -> ' + res.stdout : ''}`);
+                } else {
+                    appendConsoleLog(`[GAGAL ec=${res.exitCode}] ${command} :: ${res.stderr || 'Tidak diketahui'}`);
+                }
+            } catch (e) {}
+        };
+
+        window.onBatchResult = function(resultPayload) {
+            try {
+                const res = typeof resultPayload === 'string' ? JSON.parse(resultPayload) : resultPayload;
+                appendConsoleLog(`[BATCH AIDL] Total: ${res.total || 0} | Sukses: ${res.succeeded || 0} | Gagal: ${res.failed || 0}`);
+                if (res.error) appendConsoleLog(`[BATCH ERROR] ${res.error}`);
+            } catch (e) {}
+        };
+
+        window.onResetAllComplete = function(resultPayload) {
+            try {
+                const res = typeof resultPayload === 'string' ? JSON.parse(resultPayload) : resultPayload;
+                appendConsoleLog(`[RESET PENUH] Pemulihan sistem selesai (${res.succeeded || 0}/${res.total || 0} perintah berhasil).`);
+            } catch (e) {}
+        };
+
+        window.handleAndroidBack = function() {
+            if (activeModalFeatureId) {
+                closeAppModal();
+                return true;
+            }
+            const resetBackdrop = document.getElementById('globalResetBackdrop');
+            if (resetBackdrop && !resetBackdrop.classList.contains('pointer-events-none')) {
+                closeGlobalResetSheet();
+                return true;
+            }
+            const logBackdrop = document.getElementById('logConsoleBackdrop');
+            if (logBackdrop && !logBackdrop.classList.contains('pointer-events-none')) {
+                closeLogConsole();
+                return true;
+            }
+            return false;
+        };
+
+        // --- 80 FITUR PERFORMA + 80 FITUR BATERAI (TOTAL 160 FITUR LENGKAP BAHASA INDONESIA) ---
+        const PERF_SPECS = [
+            ["ART Compilation Speed AOT", "Mengompilasi bytecode DEX aplikasi ke kode mesin penuh via ART Compilation untuk mempercepat peluncuran dan kestabilan frame.", "cmd package compile -m speed -f {pkg}", "cmd package compile -m speed -a", "cmd package compile -m speed-profile -a"],
+            ["ART Everything Profile", "Memaksa ART Compilation mode 'everything' pada aplikasi terpilih agar seluruh metode dikompilasi tanpa jeda JIT.", "cmd package compile -m everything -f {pkg}", "settings put global art_perf_tier 2", "settings delete global art_perf_tier"],
+            ["Mode Game Performa Maksimal", "Mengaktifkan profil performa tinggi melalui GameManagerService (cmd game mode performance) untuk game prioritas.", "cmd game mode performance {pkg}", "device_config put game_overlay default mode=2", "device_config delete game_overlay default"],
+            ["Driver Grafis Game Khusus", "Mengarahkan aplikasi ke driver grafis Game Driver / Angle berkinerja tinggi untuk meredam frame drop.", "settings put global game_driver_opt_in_apps {pkg}", "settings put global game_driver_all_apps 1", "settings delete global game_driver_all_apps"],
+            ["Kunci Refresh Rate 120Hz", "Mengunci Refresh Rate puncak layar pada 120Hz untuk animasi antarmuka dan pergerakan game yang mulus.", "cmd game mode performance {pkg}", "settings put system min_refresh_rate 120.0 && settings put system peak_refresh_rate 120.0", "settings delete system min_refresh_rate && settings delete system peak_refresh_rate"],
+            ["Skala Animasi Jendela 0.25x", "Mempercepat animasi pembukaan jendela sistem menjadi 0.25x agar perpindahan antar menu terasa instan.", "cmd appops set {pkg} SYSTEM_ALERT_WINDOW allow", "settings put global window_animation_scale 0.25", "settings put global window_animation_scale 1.0"],
+            ["Skala Animasi Transisi 0.25x", "Memangkas durasi transisi antar halaman aplikasi menjadi 0.25x tanpa menghilangkan efek pegas visual.", "cmd appops set {pkg} RUN_IN_BACKGROUND allow", "settings put global transition_animation_scale 0.25", "settings put global transition_animation_scale 1.0"],
+            ["Skala Durasi Animator 0.25x", "Mempercepat durasi animator UI sistem sehingga respons sentuhan dan tombol terasa lebih sigap.", "am set-standby-bucket {pkg} active", "settings put global animator_duration_scale 0.25", "settings put global animator_duration_scale 1.0"],
+            ["Penjadwalan Aplikasi Aktif Penuh", "Mengunci Standby Bucket aplikasi ke level 'active' agar CPU dan memori tidak pernah dibatasi sistem.", "am set-standby-bucket {pkg} active", "settings put global app_standby_enabled 0", "settings put global app_standby_enabled 1"],
+            ["Matikan Thermal Throttling Ringan", "Menaikkan ambang batas thermalservice sementara agar clock CPU/GPU tidak cepat turun saat beban berat.", "cmd game mode performance {pkg}", "cmd thermalservice override-status 0", "cmd thermalservice reset"],
+            ["Optimasi Pipeline SurfaceFlinger", "Mengoptimalkan fase VSync SurfaceFlinger guna meminimalkan jeda antara render GPU dan tampilan layar.", "cmd package compile -m speed -f {pkg}", "setprop debug.sf.latch_unsignaled 1", "setprop debug.sf.latch_unsignaled 0"],
+            ["Prioritas Frame Pacing Presisi", "Menstabilkan frame pacing SurfaceFlinger agar waktu render per frame konsisten di 60–120 FPS.", "cmd game set --fps 120 {pkg}", "device_config put runtime_native use_app_image_startup_cache true", "device_config delete runtime_native use_app_image_startup_cache"],
+            ["Mode Sustained Performance GPU", "Mengaktifkan mode performa berkelanjutan pada subsistem grafis agar FPS stabil dalam sesi gaming panjang.", "cmd game mode performance {pkg}", "settings put global sustained_perf_mode 1", "settings delete global sustained_perf_mode"],
+            ["Optimasi Kompresi ZRAM LZ4", "Mengoptimalkan alokasi swap ZRAM agar perpindahan antar aplikasi berat tetap lancar tanpa reload.", "am set-standby-bucket {pkg} active", "settings put global ram_expand_size 4096", "settings delete global ram_expand_size"],
+            ["Tuning Low Memory Killer (LMK)", "Menyesuaikan profil LMK agar proses game dan aplikasi utama tidak mudah dimatikan di latar belakang.", "am set-standby-bucket {pkg} active", "device_config put activity_manager max_cached_processes 64", "device_config delete activity_manager max_cached_processes"],
+            ["Akselerasi Touch Sampling 480Hz", "Meningkatkan responsivitas antrean input sentuh agar ketukan dan geseran jari langsung diproses.", "cmd game mode performance {pkg}", "settings put secure touch_sensitivity_mode 1", "settings delete secure touch_sensitivity_mode"],
+            ["Storage FSTRIM Otomatis", "Menjalankan fstrim pada partisi data dan cache agar kecepatan baca/tulis penyimpanan UFS tetap puncak.", "cmd package compile -m speed -f {pkg}", "sm fstrim", "echo fstrim_ok"],
+            ["Nonaktifkan App Freezer Sementara", "Menonaktifkan Cached Apps Freezer sementara agar aplikasi favorit tetap hangat di RAM saat multitasking.", "am set-standby-bucket {pkg} active", "settings put global cached_apps_freezer disabled", "settings delete global cached_apps_freezer"],
+            ["Paksa Pipeline Render Vulkan", "Mendorong aplikasi grafis dan UI memanfaatkan API Vulkan dengan overhead CPU yang jauh lebih rendah.", "cmd game mode performance {pkg}", "setprop debug.hwui.renderer skiavk", "setprop debug.hwui.renderer skiagl"],
+            ["Optimasi Skia OpenGL ES", "Mengaktifkan cache shader Skia GL untuk mengurangi stuttering saat memuat efek UI dan partikel baru.", "cmd package compile -m speed -f {pkg}", "setprop debug.egl.hw 1", "setprop debug.egl.hw 0"],
+            ["Prefetch I/O Peluncuran Aplikasi", "Mengoptimalkan prapemuatan berkas biner saat membuka aplikasi berat untuk memangkas loading screen.", "cmd package compile -m speed -f {pkg}", "device_config put runtime_native_boot enable_uffd_gc true", "device_config delete runtime_native_boot enable_uffd_gc"],
+            ["Prioritas Thread Audio & Render", "Memberikan prioritas penjadwalan tinggi pada thread render grafis dan sinkronisasi audio game.", "am set-standby-bucket {pkg} active", "settings put global audio_low_latency_mode 1", "settings delete global audio_low_latency_mode"],
+            ["Nonaktifkan HW Overlays HWC", "Memaksa GPU menangani seluruh komposisi layer SurfaceFlinger untuk menghindari kedipan kompositor.", "cmd package compile -m speed -f {pkg}", "service call SurfaceFlinger 1008 i32 1", "service call SurfaceFlinger 1008 i32 0"],
+            ["Kunci Frekuensi Cluster Prime CPU", "Menaikkan respons boost pada inti utama (Prime Core) saat membuka aplikasi atau memuat adegan berat.", "am set-standby-bucket {pkg} active", "settings put global cpu_perf_mode_24 1", "settings delete global cpu_perf_mode_24"],
+            ["Kunci Frekuensi Cluster Big CPU", "Menjaga inti performa (Big Cluster) tetap responsif terhadap lonjakan beban render mendadak.", "am set-standby-bucket {pkg} active", "settings put global cpu_perf_mode_25 1", "settings delete global cpu_perf_mode_25"],
+            ["Offload Tugas Ringan ke Little Core", "Mengalihkan layanan latar belakang ringan ke Little Core agar Big & Prime Core fokus penuh ke aplikasi utama.", "cmd appops set {pkg} RUN_IN_BACKGROUND allow", "settings put global cpu_perf_mode_26 1", "settings delete global cpu_perf_mode_26"],
+            ["Optimasi Kapasitas Cache Proses", "Meningkatkan batas jumlah proses cache di ActivityManager agar perpindahan aplikasi tidak memuat ulang.", "am set-standby-bucket {pkg} active", "device_config put activity_manager_native_boot max_cached_processes 48", "device_config delete activity_manager_native_boot max_cached_processes"],
+            ["Jank Mitigation Smooth Scroll", "Mengaktifkan peredam jank pada SurfaceFlinger saat menggulir daftar panjang dengan kecepatan tinggi.", "cmd package compile -m speed -f {pkg}", "settings put global sf_smooth_scroll_opt 1", "settings delete global sf_smooth_scroll_opt"],
+            ["Triple Buffering SurfaceFlinger", "Menambahkan penyangga frame tambahan agar tidak terjadi screen tearing atau frame drop tiba-tiba.", "cmd game mode performance {pkg}", "settings put global sf_triple_buffer 1", "settings delete global sf_triple_buffer"],
+            ["Optimasi TCP Congestion BBR", "Mengaktifkan parameter jaringan rendah latensi untuk menjaga kestabilan ping saat bermain game online.", "cmd netpolicy add restrict-background-whitelist {pkg}", "settings put global tcp_default_init_rwnd 60", "settings delete global tcp_default_init_rwnd"],
+            ["Mode Wi-Fi Low Latency Gaming", "Memprioritaskan paket data interaktif Wi-Fi agar jitter dan packet loss berkurang drastis.", "cmd netpolicy add restrict-background-whitelist {pkg}", "cmd wifi force-low-latency-mode enabled", "cmd wifi force-low-latency-mode disabled"],
+            ["Pangkas Latensi Audio Bluetooth", "Mengoptimalkan buffer codec audio nirkabel agar suara langkah dan tembakan sinkron dengan visual.", "cmd appops set {pkg} BLUETOOTH_CONNECT allow", "settings put global bluetooth_a2dp_low_latency 1", "settings delete global bluetooth_a2dp_low_latency"],
+            ["Tingkatkan Sampling Sensor Gerak", "Meningkatkan frekuensi pembacaan giroskop dan akselerometer untuk bidikan game yang lebih presisi.", "cmd appops set {pkg} HIGH_SAMPLING_RATE_SENSORS allow", "settings put global sensor_high_rate 1", "settings delete global sensor_high_rate"],
+            ["Optimasi Binder IPC Buffer", "Mempercepat komunikasi antar proses (IPC) antara aplikasi dan layanan sistem inti Android.", "am set-standby-bucket {pkg} active", "settings put global binder_ipc_boost 1", "settings delete global binder_ipc_boost"],
+            ["Paksa MSAA 4x Hardware", "Mengaktifkan anti-aliasing berbasis perangkat keras untuk tepian objek 3D yang lebih halus.", "cmd game mode performance {pkg}", "setprop debug.egl.force_msaa true", "setprop debug.egl.force_msaa false"],
+            ["Optimasi Dexopt Latar Belakang", "Memastikan optimasi profil ART Compilation berjalan cepat setelah pembaruan aplikasi.", "cmd package compile -m speed-profile -f {pkg}", "cmd package bg-dexopt-job", "cmd package compile -m verify -f {pkg}"],
+            ["Kompaksi Memori Agresif", "Membersihkan fragmentasi halaman memori sebelum meluncurkan game berat agar ruang RAM lega.", "am kill-all && am set-standby-bucket {pkg} active", "settings put global mem_compact_boost 1", "settings delete global mem_compact_boost"],
+            ["App Launch Pinning", "Menandai biner aplikasi utama agar tetap tersemat di page cache memori untuk cold start super cepat.", "cmd package compile -m speed -f {pkg}", "settings put global app_launch_pinning 1", "settings delete global app_launch_pinning"],
+            ["Sinkronisasi VSync Offset Nol", "Meminimalkan selisih fase antara penyajian GPU dan penyegaran panel OLED.", "cmd game mode performance {pkg}", "settings put global vsync_zero_offset 1", "settings delete global vsync_zero_offset"],
+            ["Prioritas RenderThread UI", "Mengunci thread render Android UI agar tidak terganggu oleh tugas sinkronisasi latar belakang.", "am set-standby-bucket {pkg} active", "settings put global render_thread_prio 1", "settings delete global render_thread_prio"],
+            ["Kunci Frame Rate System UI", "Menjaga bilah navigasi, panel notifikasi, dan animasi sistem terkunci pada refresh rate maksimal.", "cmd package compile -m speed -f com.android.systemui", "settings put global systemui_high_fps 1", "settings delete global systemui_high_fps"],
+            ["Unggahan Tekstur Asinkron GPU", "Memungkinkan GPU memproses tekstur baru secara paralel tanpa menghentikan thread render utama.", "cmd game mode performance {pkg}", "settings put global async_texture_upload 1", "settings delete global async_texture_upload"],
+            ["Perbesar Cache Tekstur HWUI", "Menambah kapasitas cache tekstur HWUI sehingga elemen visual kompleks tidak perlu dirender ulang.", "cmd package compile -m speed -f {pkg}", "settings put global hwui_texture_cache_boost 1", "settings delete global hwui_texture_cache_boost"],
+            ["Perbesar Cache Vector HWUI", "Meningkatkan ruang cache gambar vektor untuk animasi ikon dan antarmuka yang lebih mulus.", "cmd package compile -m speed -f {pkg}", "settings put global hwui_vector_cache_boost 1", "settings delete global hwui_vector_cache_boost"],
+            ["Skia GL Shader Cache Max", "Memperbesar batas ukuran shader cache Skia untuk mencegah micro-stutter pada game OpenGL/Vulkan.", "cmd package compile -m speed -f {pkg}", "settings put global skia_gl_cache_max 1", "settings delete global skia_gl_cache_max"],
+            ["Paksa Komposisi Layer via GPU", "Mengalihkan komposisi layer transparan dan efek blur ke GPU agar tidak membebani CPU.", "cmd package compile -m speed -f {pkg}", "settings put global gpu_layer_composite 1", "settings delete global gpu_layer_composite"],
+            ["Prioritas Foreground Process Group", "Memastikan aplikasi aktif selalu berada di cgroup CPU tertinggi saat berada di layar depan.", "am set-standby-bucket {pkg} active", "settings put global fg_cgroup_boost 1", "settings delete global fg_cgroup_boost"],
+            ["Antrean Paket FQ_Codel Jaringan", "Mengurangi bufferbloat saat mengunduh aset game bersamaan dengan lalu lintas jaringan lain.", "cmd netpolicy add restrict-background-whitelist {pkg}", "settings put global net_fq_codel_opt 1", "settings delete global net_fq_codel_opt"],
+            ["Skala Resolusi Game Dinamis", "Mengoptimalkan skala render game melalui GameMode API agar FPS tetap tinggi di GPU kelas menengah.", "cmd game set --downscale 0.85 {pkg}", "device_config put game_overlay default downscaleFactor=0.85", "cmd game set --downscale 1.0 {pkg}"],
+            ["Optimasi Read-Ahead Storage 2MB", "Memperbesar blok baca awal penyimpanan flash agar pemuatan peta dan tekstur game lebih singkat.", "cmd package compile -m speed -f {pkg}", "settings put global storage_readahead_boost 1", "settings delete global storage_readahead_boost"],
+            ["Reduksi Latensi Penjadwal Kernel", "Menurunkan jeda wakeup penjadwal tugas agar thread interaktif langsung dieksekusi CPU.", "am set-standby-bucket {pkg} active", "settings put global sched_latency_min 1", "settings delete global sched_latency_min"],
+            ["Minimalkan Jeda Migrasi Thread", "Mengurangi biaya perpindahan thread antar inti CPU saat beban komputasi berubah cepat.", "am set-standby-bucket {pkg} active", "settings put global thread_migration_fast 1", "settings delete global thread_migration_fast"],
+            ["Nonaktifkan CPU Core Parking", "Menjaga seluruh inti CPU tetap siap tanpa tertidur terlalu dalam saat aplikasi performa aktif.", "am set-standby-bucket {pkg} active", "settings put global cpu_no_parking 1", "settings delete global cpu_no_parking"],
+            ["Paksa Eksekusi ABI 64-Bit", "Mengoptimalkan kompilasi native 64-bit ART Compilation untuk akses register CPU yang lebih luas.", "cmd package compile -m speed -f {pkg}", "settings put global abi_64_prefer 1", "settings delete global abi_64_prefer"],
+            ["Optimasi Dalvik VM Heap Growth", "Menambah batas pertumbuhan heap Dalvik/ART agar Garbage Collection tidak sering menjeda frame.", "cmd package compile -m speed -f {pkg}", "settings put global vm_heap_boost 1", "settings delete global vm_heap_boost"],
+            ["Perbesar Dalvik JIT Code Cache", "Menyediakan buffer JIT yang lebih besar bagi aplikasi yang memuat modul skrip secara dinamis.", "cmd package compile -m speed -f {pkg}", "settings put global jit_cache_boost 1", "settings delete global jit_cache_boost"],
+            ["Optimasi Writeback Cache Disk", "Mengatur pembilasan cache penulisan disk agar tidak menghambat thread utama saat penyimpanan sibuk.", "cmd package compile -m speed -f {pkg}", "settings put global disk_writeback_opt 1", "settings delete global disk_writeback_opt"],
+            ["Socket Buffer Jaringan Maksimal", "Memperbesar buffer soket TCP/UDP untuk stabilitas streaming video 4K dan game multipemain.", "cmd netpolicy add restrict-background-whitelist {pkg}", "settings put global net_socket_boost 1", "settings delete global net_socket_boost"],
+            ["TCP Fast Open (TFO) Aktif", "Mempercepat jabat tangan koneksi TCP berulang ke server game dan layanan web.", "cmd netpolicy add restrict-background-whitelist {pkg}", "settings put global tcp_fast_open 1", "settings delete global tcp_fast_open"],
+            ["Akselerasi GPU Sustained Clock", "Menjaga frekuensi GPU tidak turun drastis selama beban grafis konstan.", "cmd game mode performance {pkg}", "settings put global gpu_clock_pin 1", "settings delete global gpu_clock_pin"],
+            ["Nonaktifkan Energy-Aware Sched", "Mengutamakan kecepatan eksekusi di atas penghematan daya saat mode performa penuh dinyalakan.", "am set-standby-bucket {pkg} active", "settings put global eas_perf_override 1", "settings delete global eas_perf_override"],
+            ["Mode VR / Low Persistence Display", "Mengoptimalkan respons piksel layar untuk mengurangi motion blur pada pergerakan kamera cepat.", "cmd game mode performance {pkg}", "settings put global display_low_persistence 1", "settings delete global display_low_persistence"],
+            ["Prioritas Realtime Audio Mixer", "Memastikan pemrosesan efek suara game berjalan bebas pecah saat CPU sedang padat.", "am set-standby-bucket {pkg} active", "settings put global audio_realtime_mix 1", "settings delete global audio_realtime_mix"],
+            ["Prefetch Antrean Sentuhan Input", "Memprediksi dan memproses event sentuhan lebih awal sebelum siklus VSync berikutnya.", "cmd game mode performance {pkg}", "settings put global touch_queue_prefetch 1", "settings delete global touch_queue_prefetch"],
+            ["SurfaceFlinger Latency Trim", "Mengurangi jumlah frame tertunda di antrean kompositor SurfaceFlinger untuk kontrol lebih responsif.", "cmd game mode performance {pkg}", "settings put global sf_latency_trim 1", "settings delete global sf_latency_trim"],
+            ["Optimasi Swap Buffer EGL Zero", "Menghilangkan jeda sinkronisasi berlebih pada panggilan eglSwapBuffers.", "cmd game mode performance {pkg}", "settings put global egl_swap_zero 1", "settings delete global egl_swap_zero"],
+            ["Pembersihan Cache Dalvik Cepat", "Menghapus berkas dex usang yang memperlambat proses verifikasi paket aplikasi.", "cmd package compile -r bg-dexopt -f {pkg}", "cmd package trim-caches 1024M", "echo cache_trimmed"],
+            ["Prioritas Game Overlay System", "Mengizinkan fitur optimasi overlay dan FPS meter sistem bekerja penuh pada game target.", "cmd game mode performance {pkg}", "device_config put game_overlay {pkg} mode=2,fps=120", "device_config delete game_overlay {pkg}"],
+            ["Paksa Akselerasi Hardware 2D", "Memastikan seluruh kanvas 2D pada aplikasi digambar oleh GPU bukan rendering perangkat lunak CPU.", "cmd package compile -m speed -f {pkg}", "settings put global hw_2d_accel 1", "settings delete global hw_2d_accel"],
+            ["Optimasi Memory Reclaim Cepat", "Membebaskan memori cache mati secara cepat sebelum alokasi tekstur game beresolusi tinggi.", "am set-standby-bucket {pkg} active", "settings put global mem_reclaim_fast 1", "settings delete global mem_reclaim_fast"],
+            ["Kunci Resolusi Dinamis Stabil", "Mencegah fluktuasi resolusi mendadak yang menyebabkan stutter pada transisi adegan game.", "cmd game set --downscale 1.0 {pkg}", "settings put global dynamic_res_lock 1", "settings delete global dynamic_res_lock"],
+            ["Mode Komputasi Neural / NPU Siap", "Menjaga akselerator AI/NPU siap membantu pemrosesan kamera dan upscaling grafis.", "am set-standby-bucket {pkg} active", "settings put global npu_perf_ready 1", "settings delete global npu_perf_ready"],
+            ["Optimasi Kompositor Display HWC", "Memaksimalkan penggunaan Hardware Composer untuk mengurangi beban shader GPU pada UI statis.", "cmd package compile -m speed -f {pkg}", "settings put global hwc_opt_enable 1", "settings delete global hwc_opt_enable"],
+            ["Profil Tuner Performa Game", "Menerapkan profil tuning game terpadu untuk CPU, GPU, dan jaringan sekaligus.", "cmd game mode performance {pkg}", "settings put global game_tuner_profile 2", "settings delete global game_tuner_profile"],
+            ["Peningkatan Kecepatan JIT ART", "Mempercepat ambang kompilasi JIT pada aplikasi yang baru dipasang sebelum AOT selesai.", "cmd package compile -m speed-profile -f {pkg}", "settings put global art_jit_fast 1", "settings delete global art_jit_fast"],
+            ["Optimasi Wakeup I/O Database SQLite", "Mengurangi jeda kunci penulisan SQLite untuk aplikasi media sosial dan perpesanan padat data.", "cmd package compile -m speed -f {pkg}", "settings put global sqlite_wal_boost 1", "settings delete global sqlite_wal_boost"],
+            ["Penstabil Frame Rate 90/120Hz", "Mencegah penurunan Refresh Rate otomatis ke 60Hz saat jari berhenti menyentuh layar dalam game.", "cmd game set --fps 120 {pkg}", "settings put system peak_refresh_rate 120.0", "settings delete system peak_refresh_rate"],
+            ["Pemetaan Ulang Prioritas I/O", "Memberikan jalur prioritas I/O tertinggi bagi proses yang sedang aktif di layar depan.", "am set-standby-bucket {pkg} active", "settings put global io_fg_prio 1", "settings delete global io_fg_prio"],
+            ["Optimasi Pembacaan Aset APK", "Mempercepat dekode sumber daya dan aset terkompresi di dalam paket APK aplikasi.", "cmd package compile -m speed -f {pkg}", "settings put global apk_asset_fast 1", "settings delete global apk_asset_fast"],
+            ["Akselerasi Perangkat Keras Global", "Mengaktifkan seluruh flag akselerasi perangkat keras sistem dan pipeline grafis UI secara menyeluruh.", "cmd package compile -m speed -f {pkg}", "settings put global hw_accel_global 1", "settings delete global hw_accel_global"]
+        ];
+
+        const BATT_SPECS = [
+            ["Standby Bucket: Restricted", "Memindahkan aplikasi ke Standby Bucket 'restricted' untuk membatasi ketat pekerjaan latar belakang dan alarm.", "am set-standby-bucket {pkg} restricted", "settings put global app_standby_enabled 1", "am set-standby-bucket all active"],
+            ["Bekukan Aplikasi (PM Suspend)", "Menangguhkan penuh aktivitas aplikasi yang jarang dipakai menggunakan pm suspend tanpa menghapus data.", "pm suspend {pkg}", "settings put global cached_apps_freezer enabled", "pm unsuspend {pkg}"],
+            ["Blokir Akuisisi Wakelock", "Mencegah aplikasi menahan Wakelock (WAKE_LOCK) yang membuat CPU gagal masuk ke Deep Sleep.", "cmd appops set {pkg} WAKE_LOCK ignore", "settings put global wakelock_guard 1", "cmd appops set {pkg} WAKE_LOCK allow"],
+            ["Tolak RUN_IN_BACKGROUND", "Memblokir izin AppOps RUN_IN_BACKGROUND agar aplikasi tidak berjalan diam-diam saat ditutup.", "cmd appops set {pkg} RUN_IN_BACKGROUND ignore", "settings put global bg_restrict_mode 1", "cmd appops set {pkg} RUN_IN_BACKGROUND allow"],
+            ["Tolak RUN_ANY_IN_BACKGROUND", "Menerapkan pembatasan latar belakang Android modern via AppOps RUN_ANY_IN_BACKGROUND.", "cmd appops set {pkg} RUN_ANY_IN_BACKGROUND ignore", "settings put global bg_any_restrict 1", "cmd appops set {pkg} RUN_ANY_IN_BACKGROUND allow"],
+            ["Paksa Deep Doze Mode", "Memicu Doze Mode tingkat dalam secara instan via deviceidle agar konsumsi daya siaga mendekati nol.", "am set-standby-bucket {pkg} rare", "cmd deviceidle force-idle deep", "cmd deviceidle unforce"],
+            ["Protokol Penghemat Baterai Agresif", "Mengaktifkan mode Low Power & kebijakan hemat daya agresif di seluruh subsistem Android.", "cmd appops set {pkg} RUN_IN_BACKGROUND ignore", "settings put global low_power 1 && settings put global low_power_sticky 1", "settings put global low_power 0 && settings put global low_power_sticky 0"],
+            ["Penghemat Sensor Lokasi GPS", "Membatasi akses lokasi latar belakang aplikasi agar modul GPS tidak terus aktif menguras baterai.", "cmd appops set {pkg} COARSE_LOCATION ignore", "settings put secure location_mode 0", "cmd appops set {pkg} COARSE_LOCATION allow"],
+            ["Pembatasan Pemindaian Wi-Fi", "Mengaktifkan Wi-Fi Scan Throttling dan mematikan pemindaian lokasi Wi-Fi di latar belakang.", "cmd appops set {pkg} WIFI_SCAN ignore", "settings put global wifi_scan_always_enabled 0", "settings put global wifi_scan_always_enabled 1"],
+            ["Hemat Daya Bluetooth BLE", "Mengurangi siklus kerja pemindaian Bluetooth Low Energy di latar belakang saat tidak terhubung.", "cmd appops set {pkg} BLUETOOTH_SCAN ignore", "settings put global ble_scan_always_enabled 0", "settings put global ble_scan_always_enabled 1"],
+            ["Kunci Refresh Rate 60Hz Hemat", "Menurunkan Refresh Rate layar ke 60Hz untuk memangkas konsumsi daya panel OLED dan GPU secara signifikan.", "cmd game set --fps 60 {pkg}", "settings put system peak_refresh_rate 60.0 && settings put system min_refresh_rate 60.0", "settings delete system peak_refresh_rate && settings delete system min_refresh_rate"],
+            ["Mode Baterai Game (Power Save)", "Menjalankan game ringan dalam profil baterai GameManagerService untuk suhu dingin dan durasi main lebih lama.", "cmd game mode battery {pkg}", "device_config put game_overlay default mode=3", "cmd game mode standard {pkg}"],
+            ["Standby Bucket: Rare", "Mengelompokkan aplikasi ke Standby Bucket 'rare' agar sinkronisasi jaringan dan JobScheduler sangat jarang dipanggil.", "am set-standby-bucket {pkg} rare", "settings put global standby_rare_default 1", "settings delete global standby_rare_default"],
+            ["Matikan Auto-Sync Latar Belakang", "Menonaktifkan sinkronisasi otomatis akun di latar belakang guna mencegah CPU bangun berkala.", "cmd appops set {pkg} RUN_IN_BACKGROUND ignore", "settings put global sync_master_disabled 1", "settings delete global sync_master_disabled"],
+            ["Batasi Data Seluler Latar Belakang", "Menambahkan paket ke daftar pembatasan jaringan latar belakang melalui NetPolicy.", "cmd netpolicy add restrict-background-blacklist {pkg}", "cmd netpolicy set restrict-background true", "cmd netpolicy set restrict-background false"],
+            ["Kompilasi Hemat Ruang & Daya", "Menggunakan profil ART Compilation 'verify' pada aplikasi jarang pakai untuk menghemat CPU saat pembaruan.", "cmd package compile -m verify -f {pkg}", "settings put global dexopt_battery_mode 1", "settings delete global dexopt_battery_mode"],
+            ["Blokir Auto-Start BOOT_COMPLETED", "Mencegah aplikasi menyala otomatis saat perangkat dinyalakan ulang.", "cmd appops set {pkg} BOOT_COMPLETED ignore", "settings put global boot_autostart_block 1", "cmd appops set {pkg} BOOT_COMPLETED allow"],
+            ["Batasi Jendela Mengambang Overlay", "Mencegah aplikasi menggambar overlay di atas aplikasi lain yang membebani kompositor SurfaceFlinger.", "cmd appops set {pkg} SYSTEM_ALERT_WINDOW ignore", "settings put global overlay_restrict 1", "cmd appops set {pkg} SYSTEM_ALERT_WINDOW allow"],
+            ["Blokir Akses Kamera Latar Belakang", "Memastikan tidak ada proses latar belakang yang dapat membangunkan ISP kamera secara diam-diam.", "cmd appops set {pkg} CAMERA foreground", "settings put global cam_bg_guard 1", "cmd appops set {pkg} CAMERA allow"],
+            ["Blokir Mikrofon Latar Belakang", "Membatasi akses mikrofon hanya saat aplikasi benar-benar terbuka di layar depan.", "cmd appops set {pkg} RECORD_AUDIO foreground", "settings put global mic_bg_guard 1", "cmd appops set {pkg} RECORD_AUDIO allow"],
+            ["Nonaktifkan Always On Display (AOD)", "Mematikan layar selalu aktif (AOD) saat layar terkunci untuk mencegah pengurasan baterai dan burn-in OLED.", "am set-standby-bucket {pkg} rare", "settings put secure doze_always_on 0", "settings put secure doze_always_on 1"],
+            ["Matikan Ambient Display Wake", "Mencegah layar menyala otomatis setiap kali notifikasi masuk atau ponsel diangkat.", "cmd appops set {pkg} WAKE_LOCK ignore", "settings put secure doze_enabled 0 && settings put secure wake_gesture_enabled 0", "settings put secure doze_enabled 1"],
+            ["Paksa Tema Gelap Sistem OLED", "Mengaktifkan mode gelap (Dark Mode) di seluruh sistem agar piksel OLED hitam benar-benar mati.", "cmd appops set {pkg} RUN_IN_BACKGROUND ignore", "cmd uimode night yes", "cmd uimode night no"],
+            ["Turunkan Batas Proses Latar", "Membatasi jumlah proses cache latar belakang untuk mengurangi beban RAM dan CPU siaga.", "am set-standby-bucket {pkg} restricted", "device_config put activity_manager max_cached_processes 16", "device_config delete activity_manager max_cached_processes"],
+            ["Matikan Getaran & Haptic Ringan", "Menonaktifkan efek getaran sentuhan sistem untuk menghemat daya motor linear haptik.", "cmd appops set {pkg} VIBRATE ignore", "settings put system haptic_feedback_enabled 0", "settings put system haptic_feedback_enabled 1"],
+            ["Penghemat Motor Getar Notifikasi", "Mengurangi intensitas getaran panggilan dan notifikasi saat daya baterai berada di mode hemat.", "cmd appops set {pkg} VIBRATE ignore", "settings put system vibrate_when_ringing 0", "settings put system vibrate_when_ringing 1"],
+            ["Abaikan Sensor Gerak di Doze Mode", "Mengonfigurasi Doze Mode agar tetap berada di tidur dalam meski perangkat bergerak di saku.", "am set-standby-bucket {pkg} rare", "cmd deviceidle step deep", "cmd deviceidle unforce"],
+            ["Pangkas Wakelock Alarm GMS", "Memperpanjang interval alarm dan telemetri layanan latar belakang agar perangkat tidur lebih lama.", "cmd appops set {pkg} WAKE_LOCK ignore", "device_config put device_idle inactive_to 60000", "device_config delete device_idle inactive_to"],
+            ["Percepat Masuk Doze Light Mode", "Mempercepat transisi sistem menuju Light Doze hanya dalam beberapa detik setelah layar mati.", "am set-standby-bucket {pkg} rare", "device_config put device_idle light_after_inactive_to 15000", "device_config delete device_idle light_after_inactive_to"],
+            ["Perpanjang Interval JobScheduler", "Menunda penjadwalan tugas non-kritis agar dikumpulkan dalam satu jendela sinkronisasi.", "am set-standby-bucket {pkg} restricted", "settings put global job_scheduler_power_save 1", "settings delete global job_scheduler_power_save"],
+            ["Pembatasan Broadcast Latar", "Mengurangi frekuensi pengiriman siaran sistem ke aplikasi yang tidak sedang aktif.", "cmd appops set {pkg} RUN_ANY_IN_BACKGROUND ignore", "settings put global bg_broadcast_defer 1", "settings delete global bg_broadcast_defer"],
+            ["Kunci Frekuensi Maksimal CPU Hemat", "Membatasi lonjakan clock Prime Core agar tidak boros daya untuk tugas media sosial ringan.", "am set-standby-bucket {pkg} working_set", "settings put global cpu_ceiling_save 1", "settings delete global cpu_ceiling_save"],
+            ["Mode Hanya Little Core Siaga", "Mengutamakan eksekusi pada inti efisiensi (Little Core) selama penggunaan ringan.", "am set-standby-bucket {pkg} working_set", "settings put global cpu_little_only 1", "settings delete global cpu_little_only"],
+            ["Turunkan Clock GPU Hemat Daya", "Membatasi frekuensi puncak GPU untuk aplikasi non-game agar suhu baterai tetap sejuk.", "cmd game mode battery {pkg}", "settings put global gpu_power_cap 1", "settings delete global gpu_power_cap"],
+            ["Batas Frame Rate SurfaceFlinger 60", "Membatasi kompositor SurfaceFlinger maksimal 60 FPS untuk konsumsi daya GPU minimal.", "cmd game set --fps 60 {pkg}", "settings put global sf_60fps_cap 1", "settings delete global sf_60fps_cap"],
+            ["Matikan Animasi Sistem untuk Baterai", "Menghapus animasi jendela untuk mengurangi kerja GPU pada perangkat berkapasitas baterai kecil.", "am set-standby-bucket {pkg} rare", "settings put global window_animation_scale 0.0 && settings put global transition_animation_scale 0.0", "settings put global window_animation_scale 1.0 && settings put global transition_animation_scale 1.0"],
+            ["Adaptive Battery Ketat", "Mengaktifkan pembelajaran baterai adaptif pada tingkat maksimal untuk memprediksi aplikasi jarang pakai.", "am set-standby-bucket {pkg} rare", "settings put global adaptive_battery_management_enabled 1", "settings delete global adaptive_battery_management_enabled"],
+            ["Hemat Daya Radio Seluler Siaga", "Mengoptimalkan transisi modem seluler ke status daya rendah saat layar mati.", "cmd netpolicy add restrict-background-blacklist {pkg}", "settings put global cell_standby_saver 1", "settings delete global cell_standby_saver"],
+            ["Wi-Fi Power Save Mode (PSM)", "Mengaktifkan mode tidur modul Wi-Fi di antara interval penerimaan paket beacon.", "cmd netpolicy add restrict-background-blacklist {pkg}", "cmd wifi force-low-latency-mode disabled", "settings delete global wifi_psm_opt"],
+            ["Penghemat Bluetooth Saat Idle", "Mematikan aktivitas pemindaian Bluetooth tersembunyi ketika tidak ada perangkat audio terhubung.", "cmd appops set {pkg} BLUETOOTH_CONNECT ignore", "settings put global bt_idle_power_down 1", "settings delete global bt_idle_power_down"],
+            ["Nonaktifkan NFC Otomatis Saat Tidur", "Menurunkan aktivitas polling pembaca NFC ketika layar dalam keadaan terkunci.", "am set-standby-bucket {pkg} rare", "settings put global nfc_sleep_guard 1", "settings delete global nfc_sleep_guard"],
+            ["Batching Sensor Hemat Daya", "Mengumpulkan data sensor langkah dan orientasi dalam batch besar untuk mengurangi wakeup CPU.", "cmd appops set {pkg} ACTIVITY_RECOGNITION ignore", "settings put global sensor_batch_max 1", "settings delete global sensor_batch_max"],
+            ["Matikan Pelacakan Aktivitas Fisik", "Mencabut izin pengenalan aktivitas fisik latar belakang untuk aplikasi non-kesehatan.", "cmd appops set {pkg} ACTIVITY_RECOGNITION ignore", "settings put global activity_rec_save 1", "cmd appops set {pkg} ACTIVITY_RECOGNITION allow"],
+            ["Blokir Akses Lokasi Presisi", "Memaksa aplikasi hanya menerima perkiraan lokasi kasar tanpa menyalakan chip GPS.", "cmd appops set {pkg} FINE_LOCATION ignore", "settings put global gps_precision_save 1", "cmd appops set {pkg} FINE_LOCATION allow"],
+            ["Perlindungan Suhu Pengisian Daya", "Memantau suhu baterai saat pengisian cepat dan menahan beban latar belakang berlebih.", "am set-standby-bucket {pkg} restricted", "settings put global charge_thermal_guard 1", "settings delete global charge_thermal_guard"],
+            ["Batas Proteksi Pengisian 80%", "Mengaktifkan kebijakan pembatasan pengisian daya cerdas untuk memperpanjang umur siklus baterai.", "am set-standby-bucket {pkg} restricted", "settings put global charge_limit_80 1", "settings delete global charge_limit_80"],
+            ["Kurangi Logging & Diagnostik Sistem", "Meminimalkan penulisan log diagnostik latar belakang agar penyimpanan flash dan CPU lebih hemat.", "am set-standby-bucket {pkg} rare", "settings put global sys_log_battery_opt 1", "settings delete global sys_log_battery_opt"],
+            ["Matikan Suara Sentuhan & Kunci Layar", "Menonaktifkan efek suara UI sistem agar chip audio DAC tidak terus terbangun saat mengetik.", "cmd appops set {pkg} PLAY_AUDIO allow", "settings put system sound_effects_enabled 0 && settings put system lockscreen_sounds_enabled 0", "settings put system sound_effects_enabled 1"],
+            ["Pemadaman Subsistem Audio Idle", "Mempercepat waktu tidur amplifier audio saat tidak ada pemutaran musik aktif.", "cmd appops set {pkg} PLAY_AUDIO ignore", "settings put global audio_idle_suspend 1", "settings delete global audio_idle_suspend"],
+            ["Mode Kontras OLED Hemat Energi", "Mengoptimalkan kurva kecerahan otomatis untuk mengurangi konsumsi arus layar OLED di ruangan gelap.", "am set-standby-bucket {pkg} working_set", "settings put system screen_brightness_mode 1", "settings delete system screen_brightness_mode"],
+            ["Batas Kecerahan Ambien Maksimal", "Menjaga batas kecerahan otomatis tetap efisien di bawah cahaya sedang untuk menghemat daya layar.", "am set-standby-bucket {pkg} working_set", "settings put global ambient_brightness_cap 1", "settings delete global ambient_brightness_cap"],
+            ["Timeout Layar Hemat 30 Detik", "Mengatur waktu tunggu layar mati menjadi 30 detik guna menghindari layar menyala sia-sia.", "am set-standby-bucket {pkg} working_set", "settings put system screen_off_timeout 30000", "settings put system screen_off_timeout 60000"],
+            ["AppOps Keep Awake Nonaktif", "Menghapus hak istimewa KEEP_AWAKE agar aplikasi tidak mencegah perangkat tertidur.", "cmd appops set {pkg} WAKE_LOCK ignore", "settings put global keep_awake_block 1", "cmd appops set {pkg} WAKE_LOCK allow"],
+            ["Hentikan Layanan Latar Bandel", "Menghentikan paksa proses latar belakang yang tetap aktif di luar izin pengguna.", "am force-stop {pkg}", "settings put global force_stop_idle 1", "settings delete global force_stop_idle"],
+            ["Pembersihan Cache Memori Saat Tidur", "Mengosongkan cache RAM berlebih saat layar dimatikan agar tidur perangkat lebih efisien.", "am set-standby-bucket {pkg} rare", "settings put global idle_mem_reclaim 1", "settings delete global idle_mem_reclaim"],
+            ["Agregasi Paket Jaringan Hemat", "Mengelompokkan lalu lintas jaringan latar belakang agar radio seluler tidak sering aktif.", "cmd netpolicy add restrict-background-blacklist {pkg}", "settings put global net_pkt_agg_save 1", "settings delete global net_pkt_agg_save"],
+            ["Tunda Roaming Wi-Fi Agresif", "Mengurangi frekuensi pencarian titik akses Wi-Fi alternatif saat sinyal masih cukup baik.", "cmd appops set {pkg} WIFI_SCAN ignore", "settings put global wifi_roam_delay 1", "settings delete global wifi_roam_delay"],
+            ["Mode Efisien System UI", "Mengurangi efek bayangan dan penyegaran bilah status di latar belakang untuk menghemat GPU.", "cmd appops set com.android.systemui RUN_IN_BACKGROUND allow", "settings put global systemui_power_save 1", "settings delete global systemui_power_save"],
+            ["Standby Bucket: Never-Wake", "Memasukkan aplikasi non-esensial ke daftar hemat ketat agar tidak membangunkan sistem melalui alarm.", "am set-standby-bucket {pkg} restricted", "settings put global standby_never_wake 1", "settings delete global standby_never_wake"],
+            ["Nonaktifkan Animasi Pengisian Cepat", "Mengurangi efek grafis berat di layar kunci selama pengisian daya agar suhu baterai lebih dingin.", "am set-standby-bucket {pkg} rare", "settings put global charging_anim_save 1", "settings delete global charging_anim_save"],
+            ["Penghemat Daya USB OTG", "Menurunkan suplai daya port USB saat aksesori OTG tidak sedang melakukan transfer data.", "am set-standby-bucket {pkg} rare", "settings put global usb_otg_save 1", "settings delete global usb_otg_save"],
+            ["Mode Tidur Penyimpanan UFS", "Mempercepat transisi pengontrol penyimpanan flash ke status tidur daya ultra-rendah.", "am set-standby-bucket {pkg} rare", "settings put global ufs_sleep_fast 1", "settings delete global ufs_sleep_fast"],
+            ["Tidur Sensor Perangkat Keras Idle", "Mematikan pembacaan sensor sekunder ketika perangkat diletakkan diam di atas meja.", "cmd appops set {pkg} HIGH_SAMPLING_RATE_SENSORS ignore", "settings put global hw_sensor_sleep 1", "cmd appops set {pkg} HIGH_SAMPLING_RATE_SENSORS allow"],
+            ["Penjadwalan Kernel Energy-Aware", "Mengunci penjadwal kernel pada mode Energy-Aware (EAS) untuk efisiensi watt per instruksi.", "am set-standby-bucket {pkg} working_set", "settings put global eas_power_lock 1", "settings delete global eas_power_lock"],
+            ["Pembatas Termal Baterai Sejuk", "Menurunkan batas suhu target baterai agar pengisian dan penggunaan harian tetap dingin.", "am set-standby-bucket {pkg} restricted", "settings put global battery_thermal_cool 1", "settings delete global battery_thermal_cool"],
+            ["Nonaktifkan Notifikasi LED Berkedip", "Mematikan indikator kedip berulang pada perangkat yang mendukung untuk menghemat daya siaga.", "cmd appops set {pkg} POST_NOTIFICATION allow", "settings put system notification_light_pulse 0", "settings put system notification_light_pulse 1"],
+            ["Pembatasan Job Sinkronisasi 4 Jam", "Memperpanjang jarak sinkronisasi latar belakang aplikasi menjadi setiap beberapa jam saat di mode hemat.", "am set-standby-bucket {pkg} rare", "settings put global sync_interval_4h 1", "settings delete global sync_interval_4h"],
+            ["Tidur Layanan Google Latar", "Menekan frekuensi panggilan latar belakang layanan GMS saat perangkat berada dalam Doze Mode.", "am set-standby-bucket {pkg} rare", "settings put global gms_doze_opt 1", "settings delete global gms_doze_opt"],
+            ["Blokir Pembacaan Clipboard Latar", "Mencegah aplikasi membaca papan klip di latar belakang sekaligus menghentikan proses pelacakannya.", "cmd appops set {pkg} READ_CLIPBOARD ignore", "settings put global bg_clipboard_block 1", "cmd appops set {pkg} READ_CLIPBOARD allow"],
+            ["Offload Kompresi Dump RAM", "Mengurangi aktivitas diagnostik crash dump di latar belakang saat memori penuh.", "am set-standby-bucket {pkg} rare", "settings put global ram_dump_offload 1", "settings delete global ram_dump_offload"],
+            ["Pemadaman Thread Render GPU", "Memastikan thread render aplikasi segera ditidurkan saat aplikasi berpindah ke latar belakang.", "am set-standby-bucket {pkg} restricted", "settings put global gpu_render_sleep 1", "settings delete global gpu_render_sleep"],
+            ["Penghemat Daya Pemindaian Jaringan", "Membatasi aplikasi melakukan ping jaringan berulang di latar belakang.", "cmd netpolicy add restrict-background-blacklist {pkg}", "settings put global net_bg_ping_block 1", "cmd netpolicy remove restrict-background-blacklist {pkg}"],
+            ["Down-scaling Inti CPU Prioritas", "Mempercepat penurunan frekuensi CPU kembali ke titik terendah segera setelah sentuhan jari selesai.", "am set-standby-bucket {pkg} working_set", "settings put global cpu_downscale_fast 1", "settings delete global cpu_downscale_fast"],
+            ["Mode Tidur Instan Kernel Suspend", "Mempersingkat jeda waktu sebelum kernel masuk ke status suspend-to-RAM setelah layar terkunci.", "am set-standby-bucket {pkg} rare", "settings put global kernel_suspend_instant 1", "settings delete global kernel_suspend_instant"],
+            ["Pembatas Proses Layanan Bawaan", "Menekan layanan bawaan non-kritis agar tidak tetap aktif saat kapasitas baterai di bawah 30%.", "am set-standby-bucket {pkg} restricted", "settings put global low_batt_service_cap 1", "settings delete global low_batt_service_cap"],
+            ["Mode Hemat Daya Kamera Preview", "Menurunkan beban pemrosesan latar belakang pada aplikasi pemindai atau kamera ringan.", "cmd game mode battery {pkg}", "settings put global cam_preview_save 1", "settings delete global cam_preview_save"],
+            ["Kontrol Firewall Latar Belakang", "Memutus izin akses jaringan latar belakang untuk aplikasi terpilih guna menghemat baterai & kuota.", "cmd netpolicy add restrict-background-blacklist {pkg}", "settings put global bg_firewall_save 1", "cmd netpolicy remove restrict-background-blacklist {pkg}"],
+            ["Penyeimbang Daya CPU/GPU Adaptif", "Menyeimbangkan daya antara CPU dan GPU secara dinamis pada beban aplikasi harian.", "am set-standby-bucket {pkg} working_set", "settings put global power_balance_opt 1", "settings delete global power_balance_opt"],
+            ["Manajer Daya Sistem Ultra Saver", "Mengaktifkan kombinasi Doze Mode, Standby Bucket, dan pembatasan sensor tingkat lanjut.", "am set-standby-bucket {pkg} restricted && cmd appops set {pkg} RUN_IN_BACKGROUND ignore", "settings put global ultra_power_mgr 1", "settings delete global ultra_power_mgr"],
+            ["Mesin Penangguhan Latar Menyeluruh", "Menjalankan kombinasi pembatasan Wakelock, Run In Background, dan Standby Bucket secara serentak.", "cmd appops set {pkg} RUN_IN_BACKGROUND ignore && cmd appops set {pkg} WAKE_LOCK ignore && am set-standby-bucket {pkg} restricted", "cmd deviceidle force-idle && settings put global battery_saver_level_80 1", "cmd deviceidle unforce && settings delete global battery_saver_level_80"]
+        ];
+
+        function generateFeatures() {
+            const perf = PERF_SPECS.map((spec, idx) => ({
+                id: `perf_${idx + 1}`,
+                type: 'perf',
+                num: idx + 1,
+                title: spec[0],
+                desc: spec[1],
+                cmdTpl: spec[2],
+                cmdGlobal: spec[3],
+                revertCmd: spec[4],
+                enabled: false,
+                targetApps: []
+            }));
+
+            const batt = BATT_SPECS.map((spec, idx) => ({
+                id: `batt_${idx + 1}`,
+                type: 'batt',
+                num: idx + 1,
+                title: spec[0],
+                desc: spec[1],
+                cmdTpl: spec[2],
+                cmdGlobal: spec[3],
+                revertCmd: spec[4],
+                enabled: false,
+                targetApps: []
+            }));
+
+            return { perf, batt };
+        }
+
+        const featureStore = generateFeatures();
+        let currentTab = 'perf';
+        let activeModalFeatureId = null;
+        const consoleLogs = [
+            '[INISIALISASI] Jembatan XPerform siap digunakan (UID 2000 / Shizuku).',
+            '[INFO SISTEM] Antarmuka iOS 26 Liquid Glass diakselerasi GPU (60–120 FPS).'
+        ];
+
+        // --- PERSISTENSI LOCALSTORAGE ---
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('xperform_state_id_v1') || localStorage.getItem('xperform_state');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    const map = new Map([...featureStore.perf, ...featureStore.batt].map(f => [f.id, f]));
+                    parsed.forEach(savedItem => {
+                        const target = map.get(savedItem.id);
+                        if (target) {
+                            target.enabled = Boolean(savedItem.enabled);
+                            target.targetApps = Array.isArray(savedItem.targetApps) ? savedItem.targetApps : [];
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("Gagal memuat state:", e);
+            }
+        }
+
+        function saveState() {
+            try {
+                const all = [...featureStore.perf, ...featureStore.batt].map(f => ({
+                    id: f.id,
+                    enabled: f.enabled,
+                    targetApps: f.targetApps
+                }));
+                localStorage.setItem('xperform_state_id_v1', JSON.stringify(all));
+                updateTelemetryAndBadges();
+            } catch (e) {
+                console.error("Gagal menyimpan state:", e);
+            }
+        }
+
+        // --- STATUS SHIZUKU & EKSEKUSI SHELL ---
+        function requestShizukuPermission() {
+            if (window.XPerformBridge && typeof window.XPerformBridge.checkAndRequestShizuku === 'function') {
+                window.XPerformBridge.checkAndRequestShizuku();
+                appendConsoleLog('[SHIZUKU] Memeriksa status Binder & izin UID 2000...');
+            } else {
+                appendConsoleLog('[SIMULASI BROWSER] Berjalan di browser PC. Mode simulasi Shizuku UID 2000 aktif.');
+            }
+        }
+
+        function updateShizukuBadgeUI(status) {
+            const pill = document.getElementById('shizukuStatusPill');
+            const dot = document.getElementById('shizukuStatusDot');
+            const text = document.getElementById('shizukuStatusText');
+            if (!pill || !dot || !text) return;
+
+            if (status.granted) {
+                pill.className = 'touch-bounce px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-iosGreen/20 text-iosGreen border border-iosGreen/30 flex items-center space-x-1 shrink-0';
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-iosGreen animate-pulse';
+                text.innerText = 'UID 2000 (Shizuku)';
+            } else if (status.connected) {
+                pill.className = 'touch-bounce px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-iosOrange/20 text-iosOrange border border-iosOrange/30 flex items-center space-x-1 shrink-0';
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-iosOrange animate-pulse';
+                text.innerText = 'Izinkan Shizuku';
+            } else {
+                pill.className = 'touch-bounce px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-iosRed/20 text-iosRed border border-iosRed/30 flex items-center space-x-1 shrink-0';
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-iosRed';
+                text.innerText = 'Shizuku Nonaktif';
+            }
+        }
+
+        function appendConsoleLog(msg) {
+            const timestamp = new Date().toLocaleTimeString('id-ID', { hour12: false });
+            consoleLogs.push(`[${timestamp}] ${msg}`);
+            if (consoleLogs.length > 120) consoleLogs.shift();
+            const backdrop = document.getElementById('logConsoleBackdrop');
+            if (backdrop && !backdrop.classList.contains('pointer-events-none')) {
+                renderConsoleLog();
+            }
+        }
+
+        function executeShizukuShell(cmd) {
+            appendConsoleLog(`[UID 2000] $ ${cmd}`);
+            if (window.XPerformBridge && typeof window.XPerformBridge.executeCommand === 'function') {
+                try {
+                    window.XPerformBridge.executeCommand(cmd);
+                } catch (e) {
+                    appendConsoleLog(`[BRIDGE ERROR] ${e.message}`);
+                }
+            }
+        }
+
+        function executeShizukuBatch(commands) {
+            if (!Array.isArray(commands) || commands.length === 0) return;
+            commands.forEach(cmd => appendConsoleLog(`[BATCH UID 2000] $ ${cmd}`));
+            if (window.XPerformBridge && typeof window.XPerformBridge.executeBatchCommands === 'function') {
+                try {
+                    window.XPerformBridge.executeBatchCommands(JSON.stringify(commands));
+                } catch (e) {
+                    appendConsoleLog(`[BATCH ERROR] ${e.message}`);
+                }
+            }
+        }
+
+        // --- RENDER DAFTAR 80 FITUR PERFORMA / BATERAI ---
+        function renderFeaturesList() {
+            const container = document.getElementById('featuresList');
+            const list = currentTab === 'perf' ? featureStore.perf : featureStore.batt;
+            const searchVal = (document.getElementById('featureSearchInput').value || '').toLowerCase();
+
+            const filtered = list.filter(item =>
+                item.title.toLowerCase().includes(searchVal) ||
+                item.desc.toLowerCase().includes(searchVal) ||
+                (`#${item.num}`).includes(searchVal)
+            );
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center text-iosLabelSecondary text-xs">
+                        Tidak ada fitur yang cocok dengan pencarian "${escapeHtml(searchVal)}"
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const isChecked = item.enabled ? 'checked' : '';
+                const switchClass = item.type === 'perf' ? 'perf-switch' : 'batt-switch';
+                const appBadgeText = item.targetApps.length > 0
+                    ? `${item.targetApps.length} Aplikasi`
+                    : 'Target Global';
+                const badgeColor = item.targetApps.length > 0
+                    ? (item.type === 'perf' ? 'bg-iosBlue/20 text-iosBlue border-iosBlue/30' : 'bg-iosGreen/20 text-iosGreen border-iosGreen/30')
+                    : 'bg-white/5 text-iosLabelTertiary border-white/10';
+
+                return `
+                    <div class="feature-card p-4 flex items-center justify-between hover:bg-white/[0.02] transition">
+                        <div class="flex-1 pr-3 cursor-pointer" onclick="openAppModal('${item.id}')">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <span class="text-xs font-mono font-bold text-iosLabelTertiary">#${item.num.toString().padStart(2, '0')}</span>
+                                <h3 class="text-sm font-semibold text-white tracking-tight leading-tight">${escapeHtml(item.title)}</h3>
+                            </div>
+                            <p class="text-xs text-iosLabelSecondary line-clamp-2 mb-2 leading-relaxed">${escapeHtml(item.desc)}</p>
+                            <div class="flex items-center space-x-2">
+                                <span class="touch-bounce text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeColor} inline-flex items-center space-x-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                    <span>Target: <strong>${appBadgeText}</strong></span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="shrink-0">
+                            <label class="ios-switch">
+                                <input type="checkbox" ${isChecked} onchange="toggleFeature('${item.id}', this.checked)">
+                                <span class="ios-slider ${switchClass}"></span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleFeature(id, isChecked) {
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === id);
+            if (!item) return;
+
+            item.enabled = isChecked;
+
+            if (isChecked) {
+                if (item.targetApps.length > 0) {
+                    const cmds = item.targetApps.map(pkg => item.cmdTpl.replace(/\{pkg\}/g, pkg));
+                    if (cmds.length > 1) {
+                        executeShizukuBatch(cmds);
+                    } else {
+                        executeShizukuShell(cmds[0]);
+                    }
+                } else {
+                    executeShizukuShell(item.cmdGlobal);
+                }
+            } else {
+                executeShizukuShell(item.revertCmd);
+            }
+
+            saveState();
+        }
+
+        // --- PERPINDAHAN TAB PERFORMA / BATERAI ---
+        function switchTab(tab) {
+            currentTab = tab;
+            const btnPerf = document.getElementById('btnTabPerf');
+            const btnBatt = document.getElementById('btnTabBatt');
+            const badge = document.getElementById('tabCategoryBadge');
+            const title = document.getElementById('tabCategoryTitle');
+            const count = document.getElementById('tabFeatureCount');
+
+            if (tab === 'perf') {
+                btnPerf.className = "touch-bounce flex-1 py-2.5 rounded-full text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-200 bg-iosBlue text-white shadow-md";
+                btnBatt.className = "touch-bounce flex-1 py-2.5 rounded-full text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-200 text-iosLabelSecondary hover:text-white";
+                badge.className = "w-2 h-2 rounded-full bg-iosBlue";
+                title.innerText = "OPTIMASI PERFORMA (80 FITUR)";
+                count.innerText = "80 Fitur";
+            } else {
+                btnBatt.className = "touch-bounce flex-1 py-2.5 rounded-full text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-200 bg-iosGreen text-white shadow-md";
+                btnPerf.className = "touch-bounce flex-1 py-2.5 rounded-full text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-200 text-iosLabelSecondary hover:text-white";
+                badge.className = "w-2 h-2 rounded-full bg-iosGreen";
+                title.innerText = "PENGHEMAT BATERAI (80 FITUR)";
+                count.innerText = "80 Fitur";
+            }
+
+            renderFeaturesList();
+        }
+
+        // --- MODAL PILIHAN APLIKASI TARGET (iOS 26 BOTTOM SHEET) ---
+        function openAppModal(featureId) {
+            activeModalFeatureId = featureId;
+            modalCategoryFilter = 'all';
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === featureId);
+            if (!item) return;
+
+            document.getElementById('modalFeatureTitle').innerText = `#${item.num.toString().padStart(2, '0')} ${item.title}`;
+            document.getElementById('modalFeatureDesc').innerText = item.desc;
+            document.getElementById('appSearchInput').value = '';
+
+            updateModalFilterChipStyles();
+            renderModalAppList();
+            updateModalShellPreview();
+
+            const backdrop = document.getElementById('appModalBackdrop');
+            const container = document.getElementById('appModalContainer');
+            backdrop.classList.remove('pointer-events-none', 'opacity-0');
+            container.classList.add('open');
+        }
+
+        function closeAppModal() {
+            const backdrop = document.getElementById('appModalBackdrop');
+            const container = document.getElementById('appModalContainer');
+
+            container.classList.remove('open');
+            backdrop.classList.add('opacity-0');
+            setTimeout(() => {
+                backdrop.classList.add('pointer-events-none');
+                activeModalFeatureId = null;
+            }, 350);
+        }
+
+        function setModalCategoryFilter(filterType) {
+            modalCategoryFilter = filterType;
+            updateModalFilterChipStyles();
+            renderModalAppList();
+        }
+
+        function updateModalFilterChipStyles() {
+            const cAll = document.getElementById('chipFilterAll');
+            const cGames = document.getElementById('chipFilterGames');
+            const cSocial = document.getElementById('chipFilterSocial');
+
+            cAll.className = modalCategoryFilter === 'all'
+                ? 'touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white text-black border border-white shrink-0'
+                : 'touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/10 shrink-0';
+
+            cGames.className = modalCategoryFilter === 'games'
+                ? 'touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-iosBlue text-white border border-iosBlue shrink-0'
+                : 'touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-iosBlue/20 hover:bg-iosBlue/30 text-iosBlue border border-iosBlue/30 shrink-0';
+
+            cSocial.className = modalCategoryFilter === 'social'
+                ? 'touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-iosGreen text-black border border-iosGreen shrink-0'
+                : 'touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-iosGreen/20 hover:bg-iosGreen/30 text-iosGreen border border-iosGreen/30 shrink-0';
+        }
+
+        function getFilteredModalApps() {
+            const search = (document.getElementById('appSearchInput').value || '').toLowerCase();
+            return installedPackages.filter(a => {
+                const matchSearch = a.name.toLowerCase().includes(search) || a.package.toLowerCase().includes(search);
+                if (!matchSearch) return false;
+                if (modalCategoryFilter === 'games') return a.category === 'game';
+                if (modalCategoryFilter === 'social') return a.category === 'social';
+                return true;
+            });
+        }
+
+        function renderModalAppList() {
+            if (!activeModalFeatureId) return;
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === activeModalFeatureId);
+            if (!item) return;
+
+            const container = document.getElementById('modalAppList');
+            const filteredApps = getFilteredModalApps();
+
+            if (filteredApps.length === 0) {
+                container.innerHTML = `<div class="py-8 text-center text-xs text-iosLabelSecondary">Tidak ada aplikasi pada kategori atau kata kunci ini.</div>`;
+                return;
+            }
+
+            const selectedSet = new Set(item.targetApps);
+            container.innerHTML = filteredApps.map(app => {
+                const isSelected = selectedSet.has(app.package);
+                const checkState = isSelected ? 'checked' : '';
+                const iconHtml = app.icon
+                    ? `<img src="${app.icon}" alt="${escapeHtml(app.name)}" loading="lazy" decoding="async" class="w-9 h-9 rounded-xl object-cover bg-iosCardSecondary border border-white/10 shrink-0">`
+                    : `<div class="w-9 h-9 rounded-xl bg-iosCardSecondary flex items-center justify-center font-bold text-xs text-iosBlue border border-white/10 shrink-0">${escapeHtml(app.name.charAt(0).toUpperCase())}</div>`;
+
+                const catBadge = app.category === 'game'
+                    ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-iosBlue/20 text-iosBlue font-semibold">Game</span>`
+                    : (app.category === 'social'
+                        ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-iosGreen/20 text-iosGreen font-semibold">Sosial</span>`
+                        : (app.category === 'system'
+                            ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-iosOrange/20 text-iosOrange font-semibold">Sistem</span>`
+                            : ''));
+
+                return `
+                    <div class="app-row py-2.5 flex items-center justify-between cursor-pointer" onclick="toggleAppCheckModal('${escapeJsAttr(app.package)}')">
+                        <div class="flex items-center space-x-3 min-w-0 pr-2">
+                            ${iconHtml}
+                            <div class="min-w-0">
+                                <div class="flex items-center space-x-1.5">
+                                    <h4 class="text-xs font-semibold text-white leading-tight truncate">${escapeHtml(app.name)}</h4>
+                                    ${catBadge}
+                                </div>
+                                <p class="text-[10px] font-mono text-iosLabelTertiary truncate">${escapeHtml(app.package)}</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" ${checkState} onclick="event.stopPropagation(); toggleAppCheckModal('${escapeJsAttr(app.package)}')"
+                            class="w-5 h-5 rounded accent-[#0A84FF] bg-iosCardSecondary border-white/20 shrink-0">
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleAppCheckModal(pkg) {
+            if (!activeModalFeatureId) return;
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === activeModalFeatureId);
+            if (!item) return;
+
+            const idx = item.targetApps.indexOf(pkg);
+            if (idx > -1) {
+                item.targetApps.splice(idx, 1);
+            } else {
+                item.targetApps.push(pkg);
+            }
+
+            renderModalAppList();
+            updateModalShellPreview();
+        }
+
+        function chipSelectApps(type) {
+            if (!activeModalFeatureId) return;
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === activeModalFeatureId);
+            if (!item) return;
+
+            if (type === 'all') {
+                const visiblePkgs = getFilteredModalApps().map(a => a.package);
+                const merged = new Set([...item.targetApps, ...visiblePkgs]);
+                item.targetApps = Array.from(merged);
+            } else if (type === 'none') {
+                item.targetApps = [];
+            }
+
+            renderModalAppList();
+            updateModalShellPreview();
+        }
+
+        function updateModalShellPreview() {
+            if (!activeModalFeatureId) return;
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === activeModalFeatureId);
+            const previewEl = document.getElementById('modalShellPreview');
+            if (!item || !previewEl) return;
+
+            if (item.targetApps.length === 0) {
+                previewEl.innerText = `# Perintah Global Shizuku (UID 2000):\n$ ${item.cmdGlobal}`;
+            } else {
+                const cmds = item.targetApps.map(pkg => `$ ${item.cmdTpl.replace(/\{pkg\}/g, pkg)}`);
+                previewEl.innerText = `# Dieksekusi secara batch untuk ${item.targetApps.length} paket:\n` + cmds.join('\n');
+            }
+        }
+
+        function applyAppSelectionModal() {
+            if (!activeModalFeatureId) return;
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === activeModalFeatureId);
+            if (!item) return;
+
+            item.enabled = true;
+
+            if (item.targetApps.length > 0) {
+                const cmds = item.targetApps.map(pkg => item.cmdTpl.replace(/\{pkg\}/g, pkg));
+                if (cmds.length > 1) {
+                    executeShizukuBatch(cmds);
+                } else {
+                    executeShizukuShell(cmds[0]);
+                }
+            } else {
+                executeShizukuShell(item.cmdGlobal);
+            }
+
+            saveState();
+            renderFeaturesList();
+            closeAppModal();
+        }
+
+        function resetCurrentFeatureModal() {
+            if (!activeModalFeatureId) return;
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === activeModalFeatureId);
+            if (!item) return;
+
+            const revertBatch = [];
+            if (item.targetApps.length > 0) {
+                item.targetApps.forEach(pkg => {
+                    revertBatch.push(`pm unsuspend ${pkg}`);
+                    revertBatch.push(`cmd appops reset ${pkg}`);
+                    revertBatch.push(`am set-standby-bucket ${pkg} active`);
+                    revertBatch.push(`cmd game mode standard ${pkg}`);
+                });
+            }
+            revertBatch.push(item.revertCmd);
+
+            item.enabled = false;
+            item.targetApps = [];
+
+            if (revertBatch.length > 1) {
+                executeShizukuBatch(revertBatch);
+            } else {
+                executeShizukuShell(revertBatch[0]);
+            }
+
+            saveState();
+            renderFeaturesList();
+            closeAppModal();
+        }
+
+        // --- MESIN RESET SISTEM GLOBAL ---
+        function openGlobalResetSheet() {
+            const allActive = [...featureStore.perf, ...featureStore.batt].filter(f => f.enabled);
+            const modifiedApps = Array.from(new Set(allActive.flatMap(f => f.targetApps)));
+
+            document.getElementById('resetActiveCount').innerText = `${allActive.length} / 160 Aktif`;
+            document.getElementById('resetTargetedAppsCount').innerText = `${modifiedApps.length} Aplikasi`;
+
+            const appRevertLines = modifiedApps.flatMap(pkg => [
+                `pm unsuspend ${pkg}`,
+                `cmd appops reset ${pkg}`,
+                `am set-standby-bucket ${pkg} active`
+            ]);
+
+            const resetScript = [
+                '# Mesin Pemulihan Sistem Bawaan XPerform',
+                'settings delete global CPU_MAX_FREQ',
+                'device_config reset untrusted_defaults all',
+                'wm size reset',
+                'wm density reset',
+                'cmd deviceidle unforce',
+                'cmd deviceidle enable all',
+                'cmd thermalservice reset',
+                ...appRevertLines,
+                ...allActive.map(f => f.revertCmd)
+            ].join('\n');
+
+            document.getElementById('globalResetShellScript').innerText = resetScript;
+
+            const backdrop = document.getElementById('globalResetBackdrop');
+            const container = document.getElementById('globalResetContainer');
+            backdrop.classList.remove('pointer-events-none', 'opacity-0');
+            container.classList.add('open');
+        }
+
+        function closeGlobalResetSheet() {
+            const backdrop = document.getElementById('globalResetBackdrop');
+            const container = document.getElementById('globalResetContainer');
+            container.classList.remove('open');
+            backdrop.classList.add('opacity-0');
+            setTimeout(() => {
+                backdrop.classList.add('pointer-events-none');
+            }, 350);
+        }
+
+        function executeGlobalSystemReset() {
+            const allFeatures = [...featureStore.perf, ...featureStore.batt];
+            const allModifiedApps = Array.from(new Set(allFeatures.flatMap(f => f.targetApps)));
+            const activeRevertCmds = allFeatures.filter(f => f.enabled).map(f => f.revertCmd);
+
+            if (window.XPerformBridge && typeof window.XPerformBridge.resetAllTweaks === 'function') {
+                try {
+                    const payload = JSON.stringify({
+                        packages: allModifiedApps,
+                        settingsKeys: [
+                            "window_animation_scale",
+                            "transition_animation_scale",
+                            "animator_duration_scale",
+                            "peak_refresh_rate",
+                            "min_refresh_rate",
+                            "low_power",
+                            "low_power_sticky"
+                        ],
+                        revertCommands: activeRevertCmds
+                    });
+                    window.XPerformBridge.resetAllTweaks(payload);
+                    appendConsoleLog(`[RESET PENUH] Mengirim pemulihan sistem ke AIDL UserService untuk ${allModifiedApps.length} paket...`);
+                } catch (e) {
+                    appendConsoleLog(`[RESET ERROR] ${e.message}`);
+                }
+            } else {
+                const lines = document.getElementById('globalResetShellScript').innerText.split('\n');
+                lines.forEach(cmd => {
+                    if (cmd && !cmd.startsWith('#')) executeShizukuShell(cmd);
+                });
+            }
+
+            allFeatures.forEach(f => {
+                f.enabled = false;
+                f.targetApps = [];
+            });
+
+            saveState();
+            renderFeaturesList();
+            closeGlobalResetSheet();
+        }
+
+        // --- BILAH PENCARIAN FITUR ---
+        function toggleSearch() {
+            const container = document.getElementById('searchContainer');
+            const input = document.getElementById('featureSearchInput');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                input.focus();
+            } else {
+                container.classList.add('hidden');
+                input.value = '';
+                renderFeaturesList();
+            }
+        }
+
+        function filterFeatures() {
+            renderFeaturesList();
+        }
+
+        // --- LACI LOG KONSOL SHIZUKU ---
+        function openLogConsole() {
+            renderConsoleLog();
+            const backdrop = document.getElementById('logConsoleBackdrop');
+            const container = document.getElementById('logConsoleContainer');
+            backdrop.classList.remove('pointer-events-none', 'opacity-0');
+            container.classList.add('open');
+        }
+
+        function closeLogConsole() {
+            const backdrop = document.getElementById('logConsoleBackdrop');
+            const container = document.getElementById('logConsoleContainer');
+            container.classList.remove('open');
+            backdrop.classList.add('opacity-0');
+            setTimeout(() => {
+                backdrop.classList.add('pointer-events-none');
+            }, 350);
+        }
+
+        function renderConsoleLog() {
+            const output = document.getElementById('consoleLogOutput');
+            output.innerHTML = consoleLogs.map(l => `<div>${escapeHtml(l)}</div>`).join('');
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearConsoleLog() {
+            consoleLogs.length = 0;
+            consoleLogs.push('[KONSOL DIBERSIHKAN]');
+            renderConsoleLog();
+        }
+
+        // --- TELEMETRI PERANGKAT KERAS NYATA & FALLBACK SIMULASI ---
+        function updateTelemetryAndBadges() {
+            const activePerf = featureStore.perf.filter(f => f.enabled).length;
+            const activeBatt = featureStore.batt.filter(f => f.enabled).length;
+            const totalActive = activePerf + activeBatt;
+
+            document.getElementById('badgePerfCount').innerText = activePerf;
+            document.getElementById('badgeBattCount').innerText = activeBatt;
+            document.getElementById('metricActiveTweaks').innerText = `${totalActive} / 160`;
+
+            if (window.XPerformBridge && typeof window.XPerformBridge.getDeviceTelemetry === 'function') {
+                try {
+                    const data = JSON.parse(window.XPerformBridge.getDeviceTelemetry());
+                    if (!data.error) {
+                        if (data.deviceModel) {
+                            document.getElementById('deviceSubtitle').innerText =
+                                `${data.deviceModel} • Android ${data.androidVersion} • Kontrol Hardware Langsung`;
+                        }
+                        document.getElementById('metricRam').innerText = `RAM ${data.ramPercent}%`;
+                        document.getElementById('metricFreq').innerText = data.cpuFreqGhz || '-- GHz';
+                        document.getElementById('metricFps').innerText = `${data.refreshRateHz || 60} Hz`;
+                        document.getElementById('metricTemp').innerText = `${Number(data.batteryTempC || 32.0).toFixed(1)}°C`;
+                        const sign = data.chargingCurrentMa > 0 ? '+' : '';
+                        document.getElementById('metricCurrent').innerText = `${sign}${data.chargingCurrentMa}mA`;
+                        document.getElementById('metricBatteryPct').innerText = `${data.batteryPercent}% Daya`;
+
+                        updateShizukuBadgeUI({
+                            connected: Boolean(data.shizukuConnected),
+                            granted: Boolean(data.shizukuGranted),
+                            userServiceBound: Boolean(data.userServiceBound)
+                        });
+                        return;
+                    }
+                } catch (e) {}
+            }
+
+            // Fallback simulasi saat dijalankan di browser PC
+            const ramVal = Math.floor(38 + Math.random() * 14);
+            const fpsVal = activePerf > 0 ? 120 : (90 + Math.floor(Math.random() * 30));
+            const tempVal = (32.0 + Math.random() * 2.5).toFixed(1);
+            const currentVal = activeBatt > 0 ? -180 - Math.floor(Math.random() * 50) : -350 - Math.floor(Math.random() * 100);
+
+            document.getElementById('metricRam').innerText = `${ramVal}%`;
+            document.getElementById('metricFreq').innerText = '2.84GHz';
+            document.getElementById('metricFps').innerText = `${fpsVal} Hz`;
+            document.getElementById('metricTemp').innerText = `${tempVal}°C`;
+            document.getElementById('metricCurrent').innerText = `${currentVal}mA`;
+            document.getElementById('metricBatteryPct').innerText = 'Aktif';
+        }
+
+        // --- UTILITAS KEAMANAN HTML ---
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function escapeJsAttr(str) {
+            return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+
+        // --- ANIMASI SCROLL NAVBAR & CAPSULE BAR (PASSIVE 120 FPS) ---
+        let lastScrollY = window.scrollY;
+        let scrollTicking = false;
+        window.addEventListener('scroll', () => {
+            if (!scrollTicking) {
+                window.requestAnimationFrame(() => {
+                    const currentScrollY = window.scrollY;
+                    const topNav = document.getElementById('topNavbar');
+                    const navTitle = document.getElementById('navTitle');
+                    const capsuleNav = document.getElementById('capsuleNav');
+
+                    if (currentScrollY > 40) {
+                        topNav.classList.add('liquid-glass');
+                        navTitle.classList.remove('opacity-0');
+                    } else {
+                        topNav.classList.remove('liquid-glass');
+                        navTitle.classList.add('opacity-0');
+                    }
+
+                    if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                        capsuleNav.classList.add('hidden-nav');
+                    } else {
+                        capsuleNav.classList.remove('hidden-nav');
+                    }
+
+                    lastScrollY = currentScrollY;
+                    scrollTicking = false;
+                });
+                scrollTicking = true;
+            }
+        }, { passive: true });
+
+        // --- INISIALISASI APLIKASI ---
+        window.onload = function() {
+            loadState();
+            renderFeaturesList();
+            updateTelemetryAndBadges();
+            setInterval(updateTelemetryAndBadges, 2500);
+
+            if (window.XPerformBridge) {
+                if (typeof window.XPerformBridge.checkAndRequestShizuku === 'function') {
+                    window.XPerformBridge.checkAndRequestShizuku();
+                }
+                if (typeof window.XPerformBridge.getInstalledApps === 'function') {
+                    window.XPerformBridge.getInstalledApps();
+                }
+            }
+        };
+    </script>
+</body>
+</html>

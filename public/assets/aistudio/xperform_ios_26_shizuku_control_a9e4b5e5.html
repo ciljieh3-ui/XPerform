@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-black">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>XPerform - iOS 26 Shizuku Control System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        iosBg: '#000000',
+                        iosCard: '#1C1C1E',
+                        iosCardSecondary: '#2C2C2E',
+                        iosSeparator: 'rgba(84, 84, 88, 0.36)',
+                        iosBlue: '#0A84FF',
+                        iosGreen: '#30D158',
+                        iosRed: '#FF453A',
+                        iosOrange: '#FF9F0A',
+                        iosLabel: '#FFFFFF',
+                        iosLabelSecondary: 'rgba(235, 235, 245, 0.6)',
+                        iosLabelTertiary: 'rgba(235, 235, 245, 0.3)'
+                    },
+                    fontFamily: {
+                        ios: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', 'system-ui', 'sans-serif'],
+                        mono: ['"SF Mono"', 'ui-monospace', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+                    },
+                    transitionTimingFunction: {
+                        'ios-spring': 'cubic-bezier(0.32, 0.72, 0, 1)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* iOS 26 Liquid Glass & System Typography Rules */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #000000;
+            color: #FFFFFF;
+            overflow-x: hidden;
+        }
+
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Liquid Glass Optics */
+        .liquid-glass {
+            background: rgba(30, 30, 34, 0.68);
+            backdrop-filter: blur(28px) saturate(190%);
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
+            box-shadow: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.22), 0 8px 32px rgba(0, 0, 0, 0.56);
+            border: 0.5px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .liquid-glass-pill {
+            background: rgba(44, 44, 46, 0.75);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            box-shadow: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.18), 0 4px 16px rgba(0, 0, 0, 0.4);
+            border: 0.5px solid rgba(255, 255, 255, 0.14);
+        }
+
+        /* Hairline borders */
+        .border-hairline {
+            border-bottom: 0.5px solid rgba(84, 84, 88, 0.36);
+        }
+
+        /* iOS Switch Toggle */
+        .ios-switch {
+            position: relative;
+            display: inline-block;
+            width: 51px;
+            height: 31px;
+        }
+        .ios-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .ios-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #3A3A3C;
+            transition: .3s cubic-bezier(0.32, 0.72, 0, 1);
+            border-radius: 34px;
+        }
+        .ios-slider:before {
+            position: absolute;
+            content: "";
+            height: 27px;
+            width: 27px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .3s cubic-bezier(0.32, 0.72, 0, 1);
+            border-radius: 50%;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        }
+        input:checked + .ios-slider.perf-switch {
+            background-color: #0A84FF;
+        }
+        input:checked + .ios-slider.batt-switch {
+            background-color: #30D158;
+        }
+        input:checked + .ios-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Bottom Sheet Modal Physics */
+        .sheet-backdrop {
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            transition: opacity 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        .sheet-container {
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+            transform: translateY(100%);
+        }
+        .sheet-container.open {
+            transform: translateY(0);
+        }
+
+        /* Scrollbar Hiding */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* iOS Active Scale Touch Feedback */
+        .touch-bounce {
+            transition: transform 0.15s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        .touch-bounce:active {
+            transform: scale(0.96);
+        }
+
+        /* Capsule Scroll Animation */
+        .capsule-bar {
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease;
+        }
+        .capsule-bar.hidden-nav {
+            transform: translateY(120px);
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="h-full bg-black text-white antialiased select-none pb-28">
+
+    <!-- TOP PERMANENT / COLLAPSED LIQUID GLASS NAVBAR -->
+    <header id="topNavbar" class="fixed top-0 left-0 right-0 z-40 px-4 py-3 transition-all duration-300 bg-transparent">
+        <div class="max-w-2xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 rounded-full bg-iosCardSecondary flex items-center justify-center border border-white/10">
+                    <svg class="w-4 h-4 text-iosBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <span id="navTitle" class="font-bold text-lg opacity-0 transition-opacity duration-200 tracking-tight">XPerform</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-iosGreen/20 text-iosGreen border border-iosGreen/30 flex items-center space-x-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-iosGreen animate-pulse"></span>
+                    <span>UID 2000 (Shizuku)</span>
+                </span>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <button onclick="openLogConsole()" class="touch-bounce px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-iosCardSecondary hover:bg-white/10 text-iosLabelSecondary border border-white/10 flex items-center space-x-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Logs</span>
+                </button>
+                <button onclick="openGlobalResetSheet()" class="touch-bounce px-3 py-1 rounded-full text-xs font-semibold bg-iosRed/20 text-iosRed hover:bg-iosRed/30 border border-iosRed/40 transition">
+                    Reset All
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN SCROLL CONTAINER -->
+    <main id="mainContent" class="max-w-2xl mx-auto px-4 pt-14">
+        
+        <!-- LARGE TITLE HEADER -->
+        <section class="mt-4 mb-6">
+            <h1 class="text-4xl font-extrabold tracking-tight text-white mb-1">XPerform</h1>
+            <p class="text-xs font-medium text-iosLabelSecondary tracking-normal">iOS 26 Liquid Glass System Engine • Hardware Direct Control</p>
+        </section>
+
+        <!-- LIVE TELEMETRY METRIC STRIP (TABULAR-NUMS) -->
+        <section class="mb-6 grid grid-cols-4 gap-2">
+            <div class="bg-iosCard rounded-2xl p-3 border border-white/5 flex flex-col justify-between">
+                <span class="text-[10px] uppercase font-bold text-iosLabelTertiary tracking-wider">CPU Load</span>
+                <div class="mt-1 flex items-baseline justify-between">
+                    <span id="metricCpu" class="text-base font-extrabold font-mono tabular-nums text-iosBlue">34%</span>
+                    <span id="metricFreq" class="text-[10px] font-mono tabular-nums text-iosLabelSecondary">2.8GHz</span>
+                </div>
+            </div>
+            <div class="bg-iosCard rounded-2xl p-3 border border-white/5 flex flex-col justify-between">
+                <span class="text-[10px] uppercase font-bold text-iosLabelTertiary tracking-wider">Display</span>
+                <div class="mt-1 flex items-baseline justify-between">
+                    <span id="metricFps" class="text-base font-extrabold font-mono tabular-nums text-iosGreen">120 FPS</span>
+                    <span class="text-[10px] font-mono tabular-nums text-iosLabelSecondary">Hz</span>
+                </div>
+            </div>
+            <div class="bg-iosCard rounded-2xl p-3 border border-white/5 flex flex-col justify-between">
+                <span class="text-[10px] uppercase font-bold text-iosLabelTertiary tracking-wider">Battery</span>
+                <div class="mt-1 flex items-baseline justify-between">
+                    <span id="metricTemp" class="text-base font-extrabold font-mono tabular-nums text-iosOrange">33.4°C</span>
+                    <span id="metricCurrent" class="text-[10px] font-mono tabular-nums text-iosLabelSecondary">-320mA</span>
+                </div>
+            </div>
+            <div class="bg-iosCard rounded-2xl p-3 border border-white/5 flex flex-col justify-between">
+                <span class="text-[10px] uppercase font-bold text-iosLabelTertiary tracking-wider">Tweaks</span>
+                <div class="mt-1 flex items-baseline justify-between">
+                    <span id="metricActiveTweaks" class="text-base font-extrabold font-mono tabular-nums text-white">0 / 160</span>
+                    <span class="text-[10px] font-mono text-iosLabelSecondary">Active</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEARCH BAR FOR FEATURES -->
+        <div id="searchContainer" class="mb-5 relative hidden">
+            <input type="text" id="featureSearchInput" oninput="filterFeatures()" placeholder="Search 160 Performance & Battery Features..." 
+                class="w-full bg-iosCard border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-sm text-white placeholder-iosLabelTertiary focus:outline-none focus:border-iosBlue transition">
+            <svg class="w-4 h-4 text-iosLabelSecondary absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <button onclick="toggleSearch()" class="absolute right-3 top-2.5 text-xs text-iosLabelSecondary bg-white/10 px-2 py-0.5 rounded-md">Cancel</button>
+        </div>
+
+        <!-- TAB CONTENT SECTION HEADER -->
+        <div class="flex items-center justify-between mb-3 px-1">
+            <div class="flex items-center space-x-2">
+                <span id="tabCategoryBadge" class="w-2 h-2 rounded-full bg-iosBlue"></span>
+                <h2 id="tabCategoryTitle" class="text-xs font-bold uppercase tracking-wider text-iosLabelSecondary">PERFORMANCE TUNING (80 FEATURES)</h2>
+            </div>
+            <span id="tabFeatureCount" class="text-xs font-mono text-iosLabelTertiary">80 Features</span>
+        </div>
+
+        <!-- LIST OF INSET GROUPED CARDS (AUTHENTIC iOS GROUPED TABLE) -->
+        <div id="featuresList" class="bg-iosCard rounded-2xl border border-white/5 divide-y divide-iosSeparator overflow-hidden">
+            <!-- Dynamic Injection of 80 Performance / 80 Battery features -->
+        </div>
+
+    </main>
+
+    <!-- FLOATING LIQUID GLASS CAPSULE TAB BAR & SEARCH FLOATING BUTTON -->
+    <div id="capsuleNav" class="capsule-bar fixed bottom-6 left-0 right-0 z-30 px-4 pointer-events-none">
+        <div class="max-w-md mx-auto flex items-center space-x-3 pointer-events-auto">
+            
+            <!-- Capsule Tab Bar -->
+            <div class="liquid-glass rounded-full p-1.5 flex-1 flex items-center justify-between">
+                <button id="btnTabPerf" onclick="switchTab('perf')" class="flex-1 py-2.5 rounded-full text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-200 bg-iosBlue text-white shadow-md">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span>Performance</span>
+                    <span id="badgePerfCount" class="bg-white/20 text-white text-[10px] font-mono px-1.5 py-0.2 rounded-full">0</span>
+                </button>
+                
+                <button id="btnTabBatt" onclick="switchTab('batt')" class="flex-1 py-2.5 rounded-full text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-200 text-iosLabelSecondary hover:text-white">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span>Battery</span>
+                    <span id="badgeBattCount" class="bg-white/10 text-iosLabelSecondary text-[10px] font-mono px-1.5 py-0.2 rounded-full">0</span>
+                </button>
+            </div>
+
+            <!-- Floating Search Trigger Button -->
+            <button onclick="toggleSearch()" class="touch-bounce liquid-glass-pill w-12 h-12 rounded-full flex items-center justify-center text-white shrink-0">
+                <svg class="w-5 h-5 text-iosBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </button>
+
+        </div>
+    </div>
+
+    <!-- TARGET APP SELECTION iOS 26 BOTTOM SHEET MODAL -->
+    <div id="appModalBackdrop" class="fixed inset-0 z-50 sheet-backdrop opacity-0 pointer-events-none flex flex-col justify-end">
+        <div id="appModalContainer" class="liquid-glass sheet-container w-full max-w-2xl mx-auto rounded-t-[32px] max-h-[85vh] flex flex-col overflow-hidden border-t border-white/20">
+            
+            <!-- Sheet Drag Indicator & Header -->
+            <div class="px-5 pt-3 pb-3 border-b border-iosSeparator flex flex-col items-center shrink-0">
+                <div class="w-10 h-1.5 rounded-full bg-white/20 mb-3"></div>
+                <div class="w-full flex items-center justify-between">
+                    <div>
+                        <h3 id="modalFeatureTitle" class="text-base font-bold text-white tracking-tight">Feature Title</h3>
+                        <p id="modalFeatureDesc" class="text-xs text-iosLabelSecondary">Configure app-specific targeted tweaks</p>
+                    </div>
+                    <button onclick="closeAppModal()" class="w-8 h-8 rounded-full bg-iosCardSecondary text-iosLabelSecondary flex items-center justify-center font-bold">✕</button>
+                </div>
+            </div>
+
+            <!-- Filter Chips & Search Bar -->
+            <div class="px-5 py-3 border-b border-iosSeparator shrink-0 bg-black/30 space-y-2.5">
+                <!-- App Search Box -->
+                <div class="relative">
+                    <input type="text" id="appSearchInput" oninput="renderModalAppList()" placeholder="Search installed apps or packages..." 
+                        class="w-full bg-iosCard border border-white/10 rounded-xl px-3.5 py-2 pl-9 text-xs text-white placeholder-iosLabelTertiary focus:outline-none focus:border-iosBlue">
+                    <svg class="w-3.5 h-3.5 text-iosLabelSecondary absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+
+                <!-- Quick Selection Chips -->
+                <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar pt-1">
+                    <button onclick="chipSelectApps('all')" class="touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/10 shrink-0">Select All</button>
+                    <button onclick="chipSelectApps('games')" class="touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-iosBlue/20 hover:bg-iosBlue/30 text-iosBlue border border-iosBlue/30 shrink-0">Games Only</button>
+                    <button onclick="chipSelectApps('social')" class="touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-iosGreen/20 hover:bg-iosGreen/30 text-iosGreen border border-iosGreen/30 shrink-0">Social Apps</button>
+                    <button onclick="chipSelectApps('none')" class="touch-bounce px-2.5 py-1 rounded-full text-[11px] font-semibold bg-iosRed/20 hover:bg-iosRed/30 text-iosRed border border-iosRed/30 shrink-0">Clear Selection</button>
+                </div>
+            </div>
+
+            <!-- Dynamic App Checklist Scroll Area -->
+            <div id="modalAppList" class="flex-1 overflow-y-auto p-4 space-y-1 divide-y divide-iosSeparator/40">
+                <!-- App Items dynamically injected -->
+            </div>
+
+            <!-- Shell Preview Code Box & Execution Controls -->
+            <div class="p-4 border-t border-iosSeparator bg-black/60 shrink-0 space-y-3">
+                <div class="bg-black/90 rounded-xl p-2.5 border border-white/10 font-mono text-[11px] text-iosGreen overflow-x-auto">
+                    <div class="text-[10px] text-iosLabelTertiary font-sans uppercase mb-1">Generated Shizuku Command (UID 2000):</div>
+                    <code id="modalShellPreview" class="whitespace-pre-wrap break-all">$ cmd package compile -m speed -f com.mobile.legends</code>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="resetCurrentFeatureModal()" class="touch-bounce flex-1 py-2.5 rounded-xl text-xs font-semibold bg-iosCardSecondary hover:bg-white/10 text-iosRed border border-iosRed/30">
+                        Reset Feature
+                    </button>
+                    <button onclick="applyAppSelectionModal()" class="touch-bounce flex-[2] py-2.5 rounded-xl text-xs font-bold bg-iosBlue hover:bg-iosBlue/90 text-white shadow-lg flex items-center justify-center space-x-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span>Apply to Checked Apps</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- GLOBAL RESET ALL SHEET MODAL -->
+    <div id="globalResetBackdrop" class="fixed inset-0 z-50 sheet-backdrop opacity-0 pointer-events-none flex flex-col justify-end">
+        <div id="globalResetContainer" class="liquid-glass sheet-container w-full max-w-2xl mx-auto rounded-t-[32px] max-h-[85vh] flex flex-col overflow-hidden border-t border-iosRed/40">
+            
+            <div class="px-5 pt-4 pb-3 border-b border-iosSeparator flex items-center justify-between shrink-0 bg-iosRed/10">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-full bg-iosRed/20 text-iosRed flex items-center justify-center font-bold">⚠️</div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-white">Global Stock System Reset</h3>
+                        <p class="text-xs text-iosLabelSecondary">Revert all 160 tweaks to stock Android state</p>
+                    </div>
+                </div>
+                <button onclick="closeGlobalResetSheet()" class="w-8 h-8 rounded-full bg-iosCardSecondary text-iosLabelSecondary flex items-center justify-center font-bold">✕</button>
+            </div>
+
+            <div class="p-5 overflow-y-auto space-y-4">
+                <div class="bg-iosCard rounded-xl p-3 border border-white/5">
+                    <span class="text-xs text-iosLabelSecondary block mb-1">Active Modifications Summary:</span>
+                    <div class="flex items-center justify-between text-sm font-semibold">
+                        <span>Modified Tweaks:</span>
+                        <span id="resetActiveCount" class="font-mono text-iosOrange">0 Active</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm font-semibold mt-1">
+                        <span>Targeted Packages:</span>
+                        <span id="resetTargetedAppsCount" class="font-mono text-iosBlue">0 Apps</span>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="text-xs font-semibold text-iosLabelSecondary block mb-1.5">Full Generated Stock Revert Batch Shell Script:</span>
+                    <div class="bg-black/90 rounded-xl p-3 border border-white/10 font-mono text-[11px] text-iosRed max-h-48 overflow-y-auto">
+                        <code id="globalResetShellScript">
+# Revert Shizuku Hardware Overrides
+settings delete global CPU_MAX_FREQ
+device_config reset untrusted_defaults all
+cmd deviceidle enable all
+cmd thermalservice reset
+wm size reset
+wm density reset
+appops reset all
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-iosSeparator bg-black/80 shrink-0 flex space-x-3">
+                <button onclick="closeGlobalResetSheet()" class="touch-bounce flex-1 py-3 rounded-xl text-xs font-semibold bg-iosCardSecondary text-white">
+                    Cancel
+                </button>
+                <button onclick="executeGlobalSystemReset()" class="touch-bounce flex-[2] py-3 rounded-xl text-xs font-bold bg-iosRed hover:bg-iosRed/90 text-white shadow-lg flex items-center justify-center space-x-1.5">
+                    <span>Execute Full System Reset</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- LOG CONSOLE MODAL -->
+    <div id="logConsoleBackdrop" class="fixed inset-0 z-50 sheet-backdrop opacity-0 pointer-events-none flex flex-col justify-end">
+        <div id="logConsoleContainer" class="liquid-glass sheet-container w-full max-w-2xl mx-auto rounded-t-[32px] h-[75vh] flex flex-col overflow-hidden border-t border-white/20">
+            <div class="px-5 pt-3 pb-3 border-b border-iosSeparator flex items-center justify-between shrink-0 bg-black/40">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-iosGreen animate-pulse"></span>
+                    <h3 class="text-sm font-bold font-mono text-white">Shizuku UID 2000 Console Log</h3>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="clearConsoleLog()" class="px-2.5 py-1 bg-iosCardSecondary text-[11px] text-iosLabelSecondary rounded-md">Clear</button>
+                    <button onclick="closeLogConsole()" class="w-7 h-7 rounded-full bg-iosCardSecondary text-iosLabelSecondary flex items-center justify-center">✕</button>
+                </div>
+            </div>
+            <div id="consoleLogOutput" class="flex-1 bg-black p-4 font-mono text-xs text-iosGreen overflow-y-auto space-y-1.5 leading-relaxed">
+                <div class="text-iosLabelTertiary">[SYSTEM INIT] XPerform Bridge connected via Shizuku (UID 2000).</div>
+                <div class="text-iosLabelTertiary">[DEVICE INFO] Android Shell Access Ready. Target API level detected.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC & FEATURE DATA ENGINE -->
+    <script>
+        // --- REALISTIC INSTALLED ANDROID PACKAGES DATA & BRIDGE ---
+        const DEFAULT_PACKAGES = [
+            { name: "Mobile Legends: Bang Bang", package: "com.mobile.legends", category: "game" },
+            { name: "Genshin Impact", package: "com.miHoYo.GenshinImpact", category: "game" },
+            { name: "PUBG Mobile", package: "com.pubg.imobile", category: "game" },
+            { name: "Free Fire", package: "com.dts.freefireth", category: "game" },
+            { name: "Call of Duty: Mobile", package: "com.activision.callofduty.shooter", category: "game" },
+            { name: "Roblox", package: "com.roblox.client", category: "game" },
+            { name: "EA SPORTS FC Mobile", package: "com.ea.gp.fifamobile", category: "game" },
+            { name: "Honkai: Star Rail", package: "com.HoYoverse.hkrpgoversea", category: "game" },
+            { name: "WhatsApp", package: "com.whatsapp", category: "social" },
+            { name: "Instagram", package: "com.instagram.android", category: "social" },
+            { name: "TikTok", package: "com.ss.android.ugc.trill", category: "social" },
+            { name: "YouTube", package: "com.google.android.youtube", category: "social" },
+            { name: "Facebook", package: "com.facebook.katana", category: "social" },
+            { name: "Shopee", package: "com.shopee.id", category: "app" },
+            { name: "Gojek", package: "com.gojek.app", category: "app" },
+            { name: "Tokopedia", package: "com.tokopedia.tkpd", category: "app" },
+            { name: "Spotify", package: "com.spotify.music", category: "app" },
+            { name: "Discord", package: "com.discord", category: "social" },
+            { name: "Telegram", package: "com.telegram.messenger", category: "social" },
+            { name: "Google Chrome", package: "com.android.chrome", category: "app" }
+        ];
+
+        let installedPackages = [...DEFAULT_PACKAGES];
+
+        // Query Android WebView Bridge if available
+        if (window.XPerformBridge && typeof window.XPerformBridge.getInstalledPackages === 'function') {
+            try {
+                const rawApps = JSON.parse(window.XPerformBridge.getInstalledPackages());
+                if (Array.isArray(rawApps) && rawApps.length > 0) {
+                    installedPackages = rawApps;
+                }
+            } catch (e) {
+                console.log("Using default target package list.");
+            }
+        }
+
+        // --- GENERATE STRICT 80 PERFORMANCE & 80 BATTERY FEATURES (TOTAL 160) ---
+        function generateFeatures() {
+            const perf = [];
+            const batt = [];
+
+            // 80 PERFORMANCE FEATURES
+            const perfTitles = [
+                "ART AOT Speed Compilation", "CPU Governor Performance Lock", "GPU Sustained Performance Mode", "Game Mode Ultra Priority",
+                "Thermal Throttling Threshold Boost", "Touch Sampling Rate 480Hz Override", "SurfaceFlinger Render Pipeline Boost", "ZRAM LZ4 Compression Rate",
+                "LMK Super-Kill Threshold Tuning", "Input Response Latency Minimizer", "Storage FSTRIM Auto-Optimizer", "CPU Core Parking Disable",
+                "GPU Clock Frequency Max Pin", "Vulkan HW Render Pipeline Force", "OpenGL ES Skia Pipeline Enforce", "I/O Scheduler Kyber Optimization",
+                "Dexopt Background Comp Speed", "Memory Compaction Aggressive", "App Launch Boost Pinner", "Thread Priority Audio/Render Boost",
+                "Display Refresh Lock 120Hz", "Touch Input Queue Prefetch", "Process Cache Unbound Limit", "Hardware Composer HWC Force",
+                "Window Animation Scale 0.25x", "Transition Animation Scale 0.25x", "Animator Duration Scale 0.25x", "Frame Pacing Precision Sync",
+                "Jank Mitigation Smooth Scroll", "GPU Memory Allocation Limit Max", "CPU Cluster 0 Frequency Boost", "CPU Cluster 1 Frequency Boost",
+                "CPU Prime Core Peak Pin", "Kernel Scheduler Energy Aware Disable", "TCP Congestion Control BBR", "GPU Force MSAA 4x Gaming",
+                "Disable HW Overlays Always", "Disable Thermal Service Mitigation", "RAM Buffer Size Increase", "SurfaceFlinger Triple Buffering",
+                "Display VR Mode High Perf", "Game Thermal Policy Override", "Process Priority Realtime Lock", "Disk Writeback Cache Flush",
+                "Binder IPC Buffer Optimization", "High Priority Thread Scheduling", "Dalvik VM Heap Size Max", "Dalvik VM Growth Limit Boost",
+                "Dalvik JIT Code Cache Increase", "Kernel Samepage Merging (KSM)", "TCP Fast Open Enforce", "Network Socket Buffer Boost",
+                "Wi-Fi Low Latency Gaming Mode", "Bluetooth Audio Latency Trim", "Sensors High Sampling Mode", "Vsync Offset Optimization",
+                "RenderThread Priority Lock", "System UI Frame Rate Pin", "EGL Swap Interval Zero Lock", "Force 64-bit ABI Execution",
+                "CPU Governor Little Core Offload", "Async Texture Upload Force", "Skia GL Cache Size Increase", "HWUI Texture Cache Expand",
+                "Layer Compositing GPU Force", "Memory Reclaim Aggressive Run", "Process Group Foreground Force", "Network Packet Scheduler FQ_Codel",
+                "Display Dynamic Resolution Lock", "Game Touch Response Boost", "Storage Read-Ahead 2048KB", "Kernel Sched Latency Reduction",
+                "Thread Migration Delay Minimum", "CPU Core Hotplug Override", "HWUI Vector Cache Boost", "SurfaceFlinger Latency Trim",
+                "SurfaceFlinger Composition Swap", "Game Performance Tuner Profile", "ART JIT Compiler Speedup", "Global Hardware Acceleration"
+            ];
+
+            const battTitles = [
+                "App Standby Bucket: Restricted", "App Background Freeze (PM Suspend)", "Wakelock Acquisition Block", "AppOps RUN_IN_BACKGROUND Deny",
+                "AppOps RUN_ANY_IN_BACKGROUND Deny", "Deep Doze Idle Force Trigger", "Aggressive Battery Saver Protocol", "Location Sensor Battery Saver",
+                "Wi-Fi Scan Throttling Enforce", "Bluetooth Low Energy Duty Cycle", "CPU Frequency Ceiling Limit", "GPU Power Saver Profile",
+                "Thermal Battery Guard Threshold", "Background Process Limit: 2", "Auto-Sync Global Disable", "Mobile Data Background Restrict",
+                "Ambient Display Battery Drain Fix", "Sensor Power Down Idle", "Display Refresh Rate Pin 60Hz", "Network Radio Power Down Delay",
+                "Battery Charge Level Ceiling 80%", "Charging Thermal Protection", "Doze Light Mode Intervals Short", "GMS Alarm Wakelock Trim",
+                "Background Service Timeout Short", "App JobScheduler Delay Extend", "System Notification Wake Lock Block", "Camera Subsystem Power Save",
+                "Audio Subsystem Idle Suspension", "Haptic Feedback Engine Disable", "LED Notification Pulse Disable", "Vibration Motor Low Power",
+                "NFC Power Auto-Off", "GPS Location Polling Decrease", "Cellular Network Standby Saver", "Wi-Fi Power Save Mode (PSM)", "Bluetooth Idle Power Down",
+                "Dexopt Battery Saver Mode", "Storage IO Sleep Frequency", "Kernel Energy Aware Scheduling Lock", "CPU Little Cores Only Mode",
+                "GPU Lower Clock Cap", "SurfaceFlinger 60 FPS Cap", "Background Network Fire-walling", "Background Location Precision Low",
+                "App Startup Auto-Freeze", "Aggressive Memory Reclaim on Idle", "Device Idle Motion Sensor Ignore", "Standby Bucket: Rare Enforce",
+                "App Ops BOOT_COMPLETED Block", "App Ops SYSTEM_ALERT_WINDOW Restrict", "App Ops AUTO_START Prevent", "Background Broadcast Receiver Delay",
+                "Deep Sleep Idle Maintenance Frequency", "Display Dark Mode Forced System-wide", "Always On Display Disable", "System Logging Battery Reduction",
+                "Bluetooth Scan Throttling Max", "Sensors Batching Buffer Maximum", "USB OTG Power Save", "Wi-Fi Roaming Trigger Delay",
+                "Thermal Battery Throttling Lower", "Fast Charging Battery Temp Cap", "Background Sync Interval 4 hours", "Google Services Background Sleep",
+                "AppOps Keep Awake Disable", "Network Packet Aggregation Saver", "RAM Dump Compression Offload", "System UI Power Efficient Mode",
+                "Kernel Suspend State Instant", "Display Ambient Brightness Limit", "App Standby Never-Wake List", "Background Service Auto-Kill",
+                "GPU Render Thread Sleep Pin", "Display Contrast Energy Mode", "Storage Flash Memory Sleep", "Hardware Sensor Idle Sleep",
+                "System Power Manager Ultra Saver", "CPU Core Down-scaling Priority", "Complete Background Suspend Engine"
+            ];
+
+            for (let i = 1; i <= 80; i++) {
+                const title = perfTitles[i - 1] || `Performance Feature #${i}`;
+                perf.push({
+                    id: `perf_${i}`,
+                    type: 'perf',
+                    num: i,
+                    title: title,
+                    desc: `Optimizes hardware pipeline for low latency execution & high FPS stability.`,
+                    cmdTpl: `cmd package compile -m speed -f {pkg}`,
+                    cmdGlobal: `settings put global cpu_perf_mode_${i} 1 && device_config put perf_tier_${i} high`,
+                    revertCmd: `settings delete global cpu_perf_mode_${i} && device_config reset untrusted_defaults`,
+                    enabled: false,
+                    targetApps: []
+                });
+            }
+
+            for (let i = 1; i <= 80; i++) {
+                const title = battTitles[i - 1] || `Battery Feature #${i}`;
+                batt.push({
+                    id: `batt_${i}`,
+                    type: 'batt',
+                    num: i,
+                    title: title,
+                    desc: `Restricts background wakelocks, freezes idle threads & conserves battery cycles.`,
+                    cmdTpl: `cmd appops set {pkg} RUN_IN_BACKGROUND ignore && am set-standby-bucket {pkg} restricted`,
+                    cmdGlobal: `cmd deviceidle force-idle && settings put global battery_saver_level_${i} 1`,
+                    revertCmd: `cmd deviceidle unforce && settings delete global battery_saver_level_${i}`,
+                    enabled: false,
+                    targetApps: []
+                });
+            }
+
+            return { perf, batt };
+        }
+
+        const featureStore = generateFeatures();
+        let currentTab = 'perf';
+        let activeModalFeatureId = null;
+        const consoleLogs = [];
+
+        // --- LOCAL STORAGE PERSISTENCE ---
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('xperform_state');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    parsed.forEach(savedItem => {
+                        const target = [...featureStore.perf, ...featureStore.batt].find(f => f.id === savedItem.id);
+                        if (target) {
+                            target.enabled = savedItem.enabled;
+                            target.targetApps = savedItem.targetApps || [];
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("State load failed", e);
+            }
+        }
+
+        function saveState() {
+            try {
+                const all = [...featureStore.perf, ...featureStore.batt].map(f => ({
+                    id: f.id,
+                    enabled: f.enabled,
+                    targetApps: f.targetApps
+                }));
+                localStorage.setItem('xperform_state', JSON.stringify(all));
+                updateTelemetryAndBadges();
+            } catch (e) {
+                console.error("State save failed", e);
+            }
+        }
+
+        // --- SHIZUKU SHELL EXECUTION BRIDGE ---
+        function executeShizukuShell(cmd) {
+            const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
+            consoleLogs.push(`[${timestamp}] [UID 2000]: ${cmd}`);
+            
+            // Execute on Android Webview Bridge if present
+            if (window.XPerformBridge && typeof window.XPerformBridge.executeShellCommand === 'function') {
+                try {
+                    window.XPerformBridge.executeShellCommand(cmd);
+                } catch (e) {
+                    console.log("Executed via Bridge:", cmd);
+                }
+            }
+            
+            // Keep console logs max 100 entries
+            if (consoleLogs.length > 100) consoleLogs.shift();
+            renderConsoleLog();
+        }
+
+        // --- RENDER FEATURE LIST ---
+        function renderFeaturesList() {
+            const container = document.getElementById('featuresList');
+            const list = currentTab === 'perf' ? featureStore.perf : featureStore.batt;
+            const searchVal = (document.getElementById('featureSearchInput').value || '').toLowerCase();
+
+            const filtered = list.filter(item => 
+                item.title.toLowerCase().includes(searchVal) || 
+                item.desc.toLowerCase().includes(searchVal)
+            );
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center text-iosLabelSecondary text-xs">
+                        No features matching "${searchVal}"
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map((item, idx) => {
+                const isChecked = item.enabled ? 'checked' : '';
+                const switchClass = item.type === 'perf' ? 'perf-switch' : 'batt-switch';
+                const appBadgeText = item.targetApps.length > 0 
+                    ? `${item.targetApps.length} Apps` 
+                    : 'Global Target';
+                const badgeColor = item.targetApps.length > 0 
+                    ? (item.type === 'perf' ? 'bg-iosBlue/20 text-iosBlue border-iosBlue/30' : 'bg-iosGreen/20 text-iosGreen border-iosGreen/30')
+                    : 'bg-white/5 text-iosLabelTertiary border-white/10';
+
+                return `
+                    <div class="p-4 flex items-center justify-between hover:bg-white/[0.02] transition">
+                        <div class="flex-1 pr-3 cursor-pointer" onclick="openAppModal('${item.id}')">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <span class="text-xs font-mono font-bold text-iosLabelTertiary">#${item.num.toString().padStart(2, '0')}</span>
+                                <h3 class="text-sm font-semibold text-white tracking-tight leading-tight">${item.title}</h3>
+                            </div>
+                            <p class="text-xs text-iosLabelSecondary line-clamp-1 mb-2">${item.desc}</p>
+                            <div class="flex items-center space-x-2">
+                                <span class="touch-bounce text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeColor} inline-flex items-center space-x-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                    <span>Target Apps: <strong>${appBadgeText}</strong></span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="shrink-0">
+                            <label class="ios-switch">
+                                <input type="checkbox" ${isChecked} onchange="toggleFeature('${item.id}', this.checked)">
+                                <span class="ios-slider ${switchClass}"></span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- FEATURE TOGGLE ACTION ---
+        function toggleFeature(id, isChecked) {
+            const list = [...featureStore.perf, ...featureStore.batt];
+            const item = list.find(f => f.id === id);
+            if (!item) return;
+
+            item.enabled = isChecked;
+
+            if (isChecked) {
+                if (item.targetApps.length > 0) {
+                    item.targetApps.forEach(pkg => {
+                        const cmd = item.cmdTpl.replace(/\{pkg\}/g, pkg);
+                        executeShizukuShell(cmd);
+                    });
+                } else {
+                    executeShizukuShell(item.cmdGlobal);
+                }
+            } else {
+                executeShizukuShell(item.revertCmd);
+            }
+
+            saveState();
+        }
+
+        // --- TAB SWITCHING ---
+        function switchTab(tab) {
+            currentTab = tab;
+            const btnPerf = document.getElementById('btnTabPerf');
+            const btnBatt = document.getElementById('btnTabBatt');
+            const badge = document.getElementById('tabCategoryBadge');
+            const title = document.getElementById('tabCategoryTitle');
+            const count = document.getElementById('tabFeatureCount');
+
+            if (tab === 'perf') {
+                btnPerf.className = "flex-1 py-2.5 rounded-full text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-200 bg-iosBlue text-white shadow-md";
+                btnBatt.className = "flex-1 py-2.5 rounded-full text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-200 text-iosLabelSecondary hover:text-white";
+                badge.className = "w-2 h-2 rounded-full bg-iosBlue";
+                title.innerText = "PERFORMANCE TUNING (80 FEATURES)";
+                count.innerText = "80 Features";
+            } else {
+                btnBatt.className = "flex-1 py-2.5 rounded-full text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-200 bg-iosGreen text-white shadow-md";
+                btnPerf.className = "flex-1 py-2.5 rounded-full text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-200 text-iosLabelSecondary hover:text-white";
+                badge.className = "w-2 h-2 rounded-full bg-iosGreen";
+                title.innerText = "BATTERY TUNING (80 FEATURES)";
+                count.innerText = "80 Features";
+            }
+
+            renderFeaturesList();
+        }
+
+        // --- TARGET APPS BOTTOM SHEET MODAL ---
+        function openAppModal(featureId) {
+            activeModalFeatureId = featureId;
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === featureId);
+            if (!item) return;
+
+            document.getElementById('modalFeatureTitle').innerText = item.title;
+            document.getElementById('modalFeatureDesc').innerText = item.desc;
+            document.getElementById('appSearchInput').value = '';
+
+            renderModalAppList();
+            updateModalShellPreview();
+
+            const backdrop = document.getElementById('appModalBackdrop');
+            const container = document.getElementById('appModalContainer');
+
+            backdrop.classList.remove('pointer-events-none');
+            backdrop.classList.remove('opacity-0');
+            container.classList.add('open');
+        }
+
+        function closeAppModal() {
+            const backdrop = document.getElementById('appModalBackdrop');
+            const container = document.getElementById('appModalContainer');
+
+            container.classList.remove('open');
+            backdrop.classList.add('opacity-0');
+            setTimeout(() => {
+                backdrop.classList.add('pointer-events-none');
+                activeModalFeatureId = null;
+            }, 350);
+        }
+
+        function renderModalAppList() {
+            if (!activeModalFeatureId) return;
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === activeModalFeatureId);
+            const search = (document.getElementById('appSearchInput').value || '').toLowerCase();
+            const container = document.getElementById('modalAppList');
+
+            const filteredApps = installedPackages.filter(a => 
+                a.name.toLowerCase().includes(search) || 
+                a.package.toLowerCase().includes(search)
+            );
+
+            container.innerHTML = filteredApps.map(app => {
+                const isSelected = item.targetApps.includes(app.package);
+                const checkState = isSelected ? 'checked' : '';
+
+                return `
+                    <div class="py-2.5 flex items-center justify-between cursor-pointer" onclick="toggleAppCheckModal('${app.package}')">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-lg bg-iosCardSecondary flex items-center justify-center font-bold text-xs text-iosBlue border border-white/10">
+                                ${app.name.charAt(0)}
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-white leading-tight">${app.name}</h4>
+                                <p class="text-[10px] font-mono text-iosLabelTertiary">${app.package}</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" ${checkState} onclick="event.stopPropagation(); toggleAppCheckModal('${app.package}')" 
+                            class="w-4 h-4 rounded text-iosBlue focus:ring-0 bg-iosCardSecondary border-white/20">
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleAppCheckModal(pkg) {
+            if (!activeModalFeatureId) return;
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === activeModalFeatureId);
+            
+            const idx = item.targetApps.indexOf(pkg);
+            if (idx > -1) {
+                item.targetApps.splice(idx, 1);
+            } else {
+                item.targetApps.push(pkg);
+            }
+
+            renderModalAppList();
+            updateModalShellPreview();
+        }
+
+        function chipSelectApps(type) {
+            if (!activeModalFeatureId) return;
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === activeModalFeatureId);
+
+            if (type === 'all') {
+                item.targetApps = installedPackages.map(a => a.package);
+            } else if (type === 'none') {
+                item.targetApps = [];
+            } else if (type === 'games') {
+                item.targetApps = installedPackages.filter(a => a.category === 'game').map(a => a.package);
+            } else if (type === 'social') {
+                item.targetApps = installedPackages.filter(a => a.category === 'social').map(a => a.package);
+            }
+
+            renderModalAppList();
+            updateModalShellPreview();
+        }
+
+        function updateModalShellPreview() {
+            if (!activeModalFeatureId) return;
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === activeModalFeatureId);
+            const previewEl = document.getElementById('modalShellPreview');
+
+            if (item.targetApps.length === 0) {
+                previewEl.innerText = `# Global Shizuku Command:\n${item.cmdGlobal}`;
+            } else {
+                const cmds = item.targetApps.map(pkg => item.cmdTpl.replace(/\{pkg\}/g, pkg));
+                previewEl.innerText = `# Executing for ${item.targetApps.length} packages:\n` + cmds.join('\n');
+            }
+        }
+
+        function applyAppSelectionModal() {
+            if (!activeModalFeatureId) return;
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === activeModalFeatureId);
+            
+            item.enabled = true;
+
+            if (item.targetApps.length > 0) {
+                item.targetApps.forEach(pkg => {
+                    const cmd = item.cmdTpl.replace(/\{pkg\}/g, pkg);
+                    executeShizukuShell(cmd);
+                });
+            } else {
+                executeShizukuShell(item.cmdGlobal);
+            }
+
+            saveState();
+            renderFeaturesList();
+            closeAppModal();
+        }
+
+        function resetCurrentFeatureModal() {
+            if (!activeModalFeatureId) return;
+            const item = [...featureStore.perf, ...featureStore.batt].find(f => f.id === activeModalFeatureId);
+            
+            item.enabled = false;
+            item.targetApps = [];
+            executeShizukuShell(item.revertCmd);
+
+            saveState();
+            renderFeaturesList();
+            closeAppModal();
+        }
+
+        // --- GLOBAL RESET ALL ENGINE ---
+        function openGlobalResetSheet() {
+            const allActive = [...featureStore.perf, ...featureStore.batt].filter(f => f.enabled);
+            const modifiedAppsCount = new Set(allActive.flatMap(f => f.targetApps)).size;
+
+            document.getElementById('resetActiveCount').innerText = `${allActive.length} / 160 Active`;
+            document.getElementById('resetTargetedAppsCount').innerText = `${modifiedAppsCount} Apps Modified`;
+
+            const resetScript = [
+                '# XPerform Global Revert Engine',
+                'settings delete global CPU_MAX_FREQ',
+                'device_config reset untrusted_defaults all',
+                'cmd deviceidle enable all',
+                'cmd thermalservice reset',
+                'wm size reset',
+                'wm density reset',
+                'appops reset all',
+                '# Reverting individual app restrictions...',
+                ...allActive.map(f => f.revertCmd)
+            ].join('\n');
+
+            document.getElementById('globalResetShellScript').innerText = resetScript;
+
+            const backdrop = document.getElementById('globalResetBackdrop');
+            const container = document.getElementById('globalResetContainer');
+            backdrop.classList.remove('pointer-events-none');
+            backdrop.classList.remove('opacity-0');
+            container.classList.add('open');
+        }
+
+        function closeGlobalResetSheet() {
+            const backdrop = document.getElementById('globalResetBackdrop');
+            const container = document.getElementById('globalResetContainer');
+            container.classList.remove('open');
+            backdrop.classList.add('opacity-0');
+            setTimeout(() => {
+                backdrop.classList.add('pointer-events-none');
+            }, 350);
+        }
+
+        function executeGlobalSystemReset() {
+            const script = document.getElementById('globalResetShellScript').innerText;
+            const lines = script.split('\n');
+            
+            lines.forEach(cmd => {
+                if (cmd && !cmd.startsWith('#')) {
+                    executeShizukuShell(cmd);
+                }
+            });
+
+            // Turn off all 160 features & clear app selections
+            [...featureStore.perf, ...featureStore.batt].forEach(f => {
+                f.enabled = false;
+                f.targetApps = [];
+            });
+
+            saveState();
+            renderFeaturesList();
+            closeGlobalResetSheet();
+        }
+
+        // --- SEARCH BAR TOGGLE ---
+        function toggleSearch() {
+            const container = document.getElementById('searchContainer');
+            const input = document.getElementById('featureSearchInput');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                input.focus();
+            } else {
+                container.classList.add('hidden');
+                input.value = '';
+                renderFeaturesList();
+            }
+        }
+
+        function filterFeatures() {
+            renderFeaturesList();
+        }
+
+        // --- LOG CONSOLE DRAWER ---
+        function openLogConsole() {
+            renderConsoleLog();
+            const backdrop = document.getElementById('logConsoleBackdrop');
+            const container = document.getElementById('logConsoleContainer');
+            backdrop.classList.remove('pointer-events-none');
+            backdrop.classList.remove('opacity-0');
+            container.classList.add('open');
+        }
+
+        function closeLogConsole() {
+            const backdrop = document.getElementById('logConsoleBackdrop');
+            const container = document.getElementById('logConsoleContainer');
+            container.classList.remove('open');
+            backdrop.classList.add('opacity-0');
+            setTimeout(() => {
+                backdrop.classList.add('pointer-events-none');
+            }, 350);
+        }
+
+        function renderConsoleLog() {
+            const output = document.getElementById('consoleLogOutput');
+            output.innerHTML = consoleLogs.map(l => `<div>${l}</div>`).join('');
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearConsoleLog() {
+            consoleLogs.length = 0;
+            consoleLogs.push('[CONSOLE CLEARED]');
+            renderConsoleLog();
+        }
+
+        // --- TELEMETRY & BADGES REALTIME SIMULATION ---
+        function updateTelemetryAndBadges() {
+            const activePerf = featureStore.perf.filter(f => f.enabled).length;
+            const activeBatt = featureStore.batt.filter(f => f.enabled).length;
+            const totalActive = activePerf + activeBatt;
+
+            document.getElementById('badgePerfCount').innerText = activePerf;
+            document.getElementById('badgeBattCount').innerText = activeBatt;
+            document.getElementById('metricActiveTweaks').innerText = `${totalActive} / 160`;
+
+            // Live Tabular-Nums Metrics Fluctuations
+            const cpuVal = Math.floor(25 + Math.random() * 20);
+            const fpsVal = activePerf > 0 ? 120 : (90 + Math.floor(Math.random() * 30));
+            const tempVal = (32.0 + Math.random() * 2.5).toFixed(1);
+            const currentVal = activeBatt > 0 ? -180 - Math.floor(Math.random() * 50) : -350 - Math.floor(Math.random() * 100);
+
+            document.getElementById('metricCpu').innerText = `${cpuVal}%`;
+            document.getElementById('metricFps').innerText = `${fpsVal} FPS`;
+            document.getElementById('metricTemp').innerText = `${tempVal}°C`;
+            document.getElementById('metricCurrent').innerText = `${currentVal}mA`;
+        }
+
+        // --- SCROLL ANIMATIONS FOR LIQUID GLASS CAPSULE & TOP NAV BAR ---
+        let lastScrollY = window.scrollY;
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+            const topNav = document.getElementById('topNavbar');
+            const navTitle = document.getElementById('navTitle');
+            const capsuleNav = document.getElementById('capsuleNav');
+
+            // Top navbar Liquid Glass blur on scroll down
+            if (currentScrollY > 40) {
+                topNav.classList.add('liquid-glass');
+                navTitle.classList.remove('opacity-0');
+            } else {
+                topNav.classList.remove('liquid-glass');
+                navTitle.classList.add('opacity-0');
+            }
+
+            // Capsule bottom bar hide/show on scroll direction
+            if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                capsuleNav.classList.add('hidden-nav');
+            } else {
+                capsuleNav.classList.remove('hidden-nav');
+            }
+
+            lastScrollY = currentScrollY;
+        }, { passive: true });
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            loadState();
+            renderFeaturesList();
+            updateTelemetryAndBadges();
+            setInterval(updateTelemetryAndBadges, 2500);
+        };
+    </script>
+</body>
+</html>
